@@ -1,0 +1,12 @@
+
+OWNER_PRIVATE_KEY='5Jwehyg2mSmgagZrxN78V3gpFkconKRWJzWVpdgMNdbF4CCcAh6'
+OWNER_PUBLIC_KEY='EOS5zps2homeR9T1MkVwK9Amz9Abqh3PMp3D47t5su2t4VZqKSvBF'
+
+ACTIVE_PRIVATE_KEY='5JQmkJXivc4JzV7GzakAnbRKm1Kz7m5KKWW8UdkZW3KpBibtB99'
+ACTIVE_PUBLIC_KEY='EOS5uKFiNf8jpNvFukgoLMCLtWrb3Ps7UNBDvm32xSqGchCX6FD7T'
+
+CONTRACT_NAME=eosdactoken
+ACCOUNT_NAME=eosdactoken
+
+# Set to false if the ABI is from another source eg. super implementation as is currency.
+SHOULD_GENERATE_ABI=false
