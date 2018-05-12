@@ -36,22 +36,15 @@ public:
             });
     }
 
-    void clear(string message) {
-        cleanTable<regmembers>();
-        print("clearing.....", message.c_str());
+    void clear(asset sym, account_name owner) {
+        cleanTable<regmembers>(_self, _self);
+        token::clear(sym, owner);
+
+        print("clearing.....");
     }
 
 private:
     regmembers registeredgmembers;
-
-    template <typename T>
-    void cleanTable(){
-        T db(_self, _self);
-        while(db.begin() != db.end()){
-            auto itr = --db.end();
-            db.erase(itr);
-        }
-    }
 };
 
 EOSIO_ABI(eosdactoken, (memberreg)(memberunreg)(clear)(create)(issue)(transfer)(burn))

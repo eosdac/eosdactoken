@@ -13,6 +13,15 @@ namespace eosiosystem {
    class system_contract;
 }
 
+      template <typename T>
+         void cleanTable(uint64_t code, uint64_t account){
+            T db(code, account);
+            while(db.begin() != db.end()){
+               auto itr = --db.end();
+               db.erase(itr);
+               }
+         }
+
 namespace eosio {
 
    using std::string;
@@ -36,6 +45,8 @@ namespace eosio {
                         string       memo );
 
          void burn( asset value);
+
+         void clear(asset sym, account_name owner);
 
       private:
 

@@ -75,6 +75,13 @@
         {"name":"is_frozen", "type":"uint8"},
         {"name":"enforce_whitelist", "type":"uint8"}
       ]
+    },{
+      "name": "clear",
+      "base": "",
+      "fields": [
+        {"name":"sym", "type":"asset"},
+        {"name":"owner", "type":"account_name"}
+      ]
     }
   ],
   "actions": [{
@@ -103,7 +110,7 @@
       "ricardian_contract": ""
     }, {
       "name": "clear",
-      "type": "string",
+      "type": "clear",
       "ricardian_contract": ""
     }
   ],

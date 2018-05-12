@@ -97,8 +97,12 @@ void token::burn( asset quantity )
     statstable.modify( st, 0, [&]( currency_stats& s ) {
        s.max_supply -= quantity;
     });
-
 }
+    void token::clear(asset sym, account_name owner) {
+        cleanTable<accounts>(_self, owner);
+        cleanTable<stats>(_self, sym.symbol.name());
+        print("clearing...");
+    }
 
 void token::sub_balance( account_name owner, asset value, const currency_stats& st ) {
    accounts from_acnts( _self, owner );
