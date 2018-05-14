@@ -153,6 +153,13 @@ run cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms":
    [[ "$output" =~ .*"missing authority of eosio".* ]]
 }
 
+@test "Member reg with valid auth for second account should succeed" {
+run cleos push action eosdactoken memberreg '{ "sender": "tester1", "agreedterms": "initaltermsagreedbyuser"}' -p tester1
+   echo $output >&2
+   [ "$status" -eq 0 ]
+   [[ "$output" =~ .*"eosdactoken::memberreg".* ]]
+}
+
 @test "Member reg with valid auth for should succeed" {
 run cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}' -p eosio
    echo $output >&2
@@ -160,13 +167,17 @@ run cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms":
    [[ "$output" =~ .*"eosdactoken::memberreg".* ]]
 }
 
-@test "Read back the result for regmembers - hasagreed should be 1" {
+@test "Read back the result for regmembers hasagreed should be 1" {
 run cleos get table eosdactoken eosdactoken members
    echo $output >&2
    [ "$status" -eq 0 ]
-   [[ "$output" =~ .*'"agreedterms": "initaltermsagreedbyuser"'.* ]]
-   [[ "$output" =~ .*'"sender": "eosio"'.* ]]
-   [[ "$output" =~ .*'"hasagreed": 1'.* ]]
+   #  echo jq -R $output '.rows[0].agreedterms' >&2
+
+   [[ `echo $output | jq '.rows[0].agreedterms'` == "initaltermsagreedbyuser" ]]
+   # .*'{\n  "rows": [{\n      "sender": "eosido",\n      "agreedterms": "subsequenttermsagreedbyuser",\n      "hasagreed": 0\n    },{\n      "sender": "tester1",\n      "agreedterms": "initaltermsagreedbyuser",\n      "hasagreed": 1\n    }'.* ]]
+   # [[ "$output" =~ .*'"agreedterms": "initaltermsagreedbyuser"'.* ]]
+   # [[ "$output" =~ .*'"sender": "eosio"'.* ]]
+   # [[ "$output" =~ .*'"hasagreed": 1'.* ]]
 }
 
 @test "Update existing member reg without auth should fail" {
@@ -176,7 +187,7 @@ run cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms":
    [[ "$output" =~ .*"transaction must have at least one authorization".* ]]
 }
 
-@test "Update existing member reg with mistmatching auth should fail" {
+@test "Update existing member reg with mismatching auth should fail" {
 run cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken
    echo $output >&2
    [ "$status" -eq 1 ]
@@ -190,7 +201,7 @@ run cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms":
    [[ "$output" =~ .*"eosdactoken::memberreg".* ]]
 }
 
-@test "Read back the result for regmembers - hasagreed should be 1" {
+@test "Read back the result for regmembers hasagreed should maybe be 1" {
 run cleos get table eosdactoken eosdactoken members
    echo $output >&2
    [ "$status" -eq 0 ]

@@ -10,11 +10,10 @@ struct member {
     name sender;
     /// Hash of agreed terms
     string agreedterms;
-    uint8_t hasagreed;
 
     name primary_key() const { return sender; }
 
-    EOSLIB_SERIALIZE(member, (sender)(agreedterms)(hasagreed))
+    EOSLIB_SERIALIZE(member, (sender)(agreedterms))
 };
 
 typedef multi_index<N(members), member> regmembers;

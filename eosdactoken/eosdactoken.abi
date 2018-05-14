@@ -15,7 +15,6 @@
       "fields": [
         {"name":"sender", "type":"account_name"},
         {"name":"agreedterms", "type":"string"},
-        {"name":"hasagreed", "type":"uint8"}
       ]
     },{
       "name": "membereg",

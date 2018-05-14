@@ -21,7 +21,6 @@ public:
             registeredgmembers.emplace(_self, [&](member& mem) {
                 mem.sender = sender;
                 mem.agreedterms = agreedterms;
-                mem.hasagreed = true;
             });
         }
     }
@@ -31,9 +30,7 @@ public:
 
         auto regMember = registeredgmembers.find(sender);
         eosio_assert(regMember != registeredgmembers.end(), "Member is not registered");
-            registeredgmembers.modify(regMember, _self, [&](member& mem){
-                mem.hasagreed = false;
-            });
+        registeredgmembers.erase(regMember);
     }
 
     void clear(asset sym, account_name owner) {
