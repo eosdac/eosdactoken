@@ -1,4 +1,5 @@
 require 'rspec_command'
+require "json"
 
 RSpec.configure do |config|
   config.include RSpecCommand
@@ -9,78 +10,90 @@ describe "Clear all tables first (only for debugging and testing)" do
   its(:stdout) { is_expected.to include('eosdactoken::clear') }
 end
 
-describe "Create a new currency without account auth should fail" do
-  command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+describe "Create a new currency" do
+  context "without account auth should fail" do
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
+
+  context "with mismatching auth should fail" do
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}' -p eosio), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+  end
+
+  context "with matching issuer and account auth should succeed." do
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}' -p eosdactoken), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::create') }
+  end
 end
 
-describe "Create a new currency with mismatching auth should fail" do
-  command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}' -p eosio), allow_error: true
-  its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
-end
+describe "Issue new currency" do
+  context "without valid auth should fail" do
+    command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."}'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
 
-describe "Create a new currency with matching issuer and account auth should succeed." do
-  command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}' -p eosdactoken), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::create') }
-end
+  context "without owner auth should fail" do
+    command %(cleos push action eosdactoken issue '{ "to": "tester1", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."} -p tester1'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
 
-describe "Issue new currency without valid auth should fail" do
-  command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."}'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
-end
+  context "with mismatching auth should fail" do
+    command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosio), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+  end
 
-describe "Issue new currency without owner auth should fail" do
-  command %(cleos push action eosdactoken issue '{ "to": "tester1", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."} -p tester1'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
-end
+  context "with valid auth should succeed" do
+    command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::issue') }
+  end
 
-describe "Issue new currency with mismatching auth should fail" do
-  command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosio), allow_error: true
-  its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
-end
+  context "greater than max should fail" do
+    command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "11000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('quantity exceeds available supply') }
+  end
 
-describe "Issue new currency with valid auth should succeed" do
-  command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::issue') }
-end
-
-describe "Issue currency greater than max should fail" do
-  command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "11000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
-  its(:stderr) { is_expected.to include('quantity exceeds available supply') }
-end
-
-describe "Issue inflation on currency with valid auth should succeed" do
-  command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "2000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::issue') }
+  context "for inflation with valid auth should succeed" do
+    command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "2000.0000 ABC", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::issue') }
+  end
 end
 
 describe "Read back the stats after issuing currency should display max supply, supply and issuer" do
-  json_string = <<~JSON
-  {
-    "ABC": {
-      "supply": "3000.0000 ABC",
-      "max_supply": "10000.0000 ABC",
-      "issuer": "eosdactoken"
-    }
-  }
-  JSON
   command %(cleos get currency stats eosdactoken ABC), allow_error: true
-  its(:stdout) { is_expected.to eq json_string }
+  it do
+    expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
+    {
+      "ABC": {
+        "supply": "3000.0000 ABC",
+        "max_supply": "10000.0000 ABC",
+        "issuer": "eosdactoken"
+      }
+    }
+    JSON
+  end
 end
 
-describe "Transfer some tokens without auth should fail" do
-  command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABC", "memo": "my first transfer"}'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
-end
+describe "Transfer some tokens" do
+  context "without auth should fail" do
+    command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABC", "memo": "my first transfer"}'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
 
-describe "Transfer some tokens with mismatching auth should fail" do
-  command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABC", "memo": "my first transfer"}' -p eosio), allow_error: true
-  its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
-end
+  context "with mismatching auth should fail" do
+    command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABC", "memo": "my first transfer"}' -p eosio), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+  end
 
-describe "Transfer some tokens with auth should succeed" do
-  command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABC", "memo": "my first transfer"}' --permission eosdactoken@active), allow_error: true
-  its(:stdout) { is_expected.to include('500.0000 ABC') }
+  context "with valid auth should succeed" do
+    command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABC", "memo": "my first transfer"}' --permission eosdactoken@active), allow_error: true
+    its(:stdout) { is_expected.to include('500.0000 ABC') }
+  end
+
+  context "with amount greater than balance should fail" do
+    command %(cleos push action eosdactoken transfer '{ "from": "eosio", "to": "eosdactoken", "quantity": "50000.0000 ABC", "memo": "my first transfer"}' -p eosio), allow_error: true
+    its(:stderr) { is_expected.to include('overdrawn balance') }
+  end
 end
 
 describe "Read back the result balance" do
@@ -89,133 +102,138 @@ describe "Read back the result balance" do
 
 end
 
-describe "Transfer tokens amount grgater than balance should fail" do
-  command %(cleos push action eosdactoken transfer '{ "from": "eosio", "to": "eosdactoken", "quantity": "50000.0000 ABC", "memo": "my first transfer"}' -p eosio), allow_error: true
-  its(:stderr) { is_expected.to include('overdrawn balance') }
+describe "Burn tokens" do
+  context "more than available supply should fail" do
+    command %(cleos push action eosdactoken burn '{ "quantity": "9500.0000 ABC"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('burn quantity exceeds available supply') }
+  end
 
-end
+  context "without auth should fail" do
+    command %(cleos push action eosdactoken burn '{ "quantity": "500.0000 ABC"}'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
 
-describe "Burn more than available supply should fail" do
-  command %(cleos push action eosdactoken burn '{ "quantity": "9500.0000 ABC"}' -p eosdactoken), allow_error: true
-  its(:stderr) { is_expected.to include('burn quantity exceeds available supply') }
-end
+  context "with wrong auth should fail" do
+    command %(cleos push action eosdactoken burn '{ "quantity": "500.0000 ABC"}' -p eosio), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+  end
 
-describe "Burn tokens without auth should fail" do
-  command %(cleos push action eosdactoken burn '{ "quantity": "500.0000 ABC"}'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
-end
-
-describe "Burn tokens with wrong auth should fail" do
-  command %(cleos push action eosdactoken burn '{ "quantity": "500.0000 ABC"}' -p eosio), allow_error: true
-  its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
-end
-
-describe "Burn a legal amount of tokens should succeed" do
-  command %(cleos push action eosdactoken burn '{ "quantity": "500.0000 ABC"}' -p eosdactoken), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::burn') }
+  context "with legal amount of tokens should succeed" do
+    command %(cleos push action eosdactoken burn '{ "quantity": "500.0000 ABC"}' -p eosdactoken), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::burn') }
+  end
 end
 
 describe "Stats and max supply should be less now" do
   command %(cleos get currency stats eosdactoken ABC), allow_error: true
 end
 
-describe "Member reg without auth should fail" do
-  command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
-end
+describe "Member reg" do
+  context "without auth should fail" do
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
 
-describe "Member reg with mismatching auth should fail" do
-  command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}' -p eosdactoken), allow_error: true
-  its(:stderr) { is_expected.to include('missing authority of eosio') }
-end
+  context "with mismatching auth should fail" do
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of eosio') }
+  end
 
-describe "Member reg with valid auth for second account should succeed" do
-  command %(cleos push action eosdactoken memberreg '{ "sender": "tester1", "agreedterms": "initaltermsagreedbyuser"}' -p tester1), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
-end
+  context "with valid auth for second account should succeed" do
+    command %(cleos push action eosdactoken memberreg '{ "sender": "tester1", "agreedterms": "initaltermsagreedbyuser"}' -p tester1), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
+  end
 
-describe "Member reg with valid auth for should succeed" do
-  command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}' -p eosio), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
-end
+  context "with valid auth for should succeed" do
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}' -p eosio), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
+  end
 
-describe "Read back the result for regmembers hasagreed should have two accounts" do
-  json_string = <<~JSON
-  {
-    "rows": [{
-        "sender": "eosio",
-        "agreedterms": "initaltermsagreedbyuser"
-      },{
-        "sender": "tester1",
-        "agreedterms": "initaltermsagreedbyuser"
+  describe "Read back the result for regmembers hasagreed should have two accounts" do
+    command %(cleos get table eosdactoken eosdactoken members), allow_error: true
+    it do
+      expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
+      {
+        "rows": [{
+          "sender": "eosio",
+          "agreedterms": "initaltermsagreedbyuser"
+          },{
+            "sender": "tester1",
+            "agreedterms": "initaltermsagreedbyuser"
+          }
+        ],
+        "more": false
       }
-    ],
-    "more": false
-  }
-  JSON
-  command %(cleos get table eosdactoken eosdactoken members), allow_error: true
-  its(:stdout) { is_expected.to eq json_string }
+      JSON
+    end
+  end
 end
 
-describe "Update existing member reg without auth should fail" do
-  command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "subsequenttermsagreedbyuser"}'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
-end
+describe "Update existing member reg" do
+  context "without auth should fail" do
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "subsequenttermsagreedbyuser"}'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
 
-describe "Update existing member reg with mismatching auth should fail" do
-  command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken), allow_error: true
-  its(:stderr) { is_expected.to include('missing authority of eosio') }
-end
+  context "with mismatching auth should fail" do
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of eosio') }
+  end
 
-describe "Update existing member reg with auth" do
-  command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosio@active), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
+  context "with valid auth" do
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosio@active), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
+  end
 end
 
 describe "Read back the result for regmembers hasagreed should maybe be 1" do
-  json_string = <<~JSON
-  {
-    "rows": [{
+  command %(cleos get table eosdactoken eosdactoken members), allow_error: true
+  it do
+    expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
+    {
+      "rows": [{
         "sender": "eosio",
         "agreedterms": "subsequenttermsagreedbyuser"
-      },{
-        "sender": "tester1",
-        "agreedterms": "initaltermsagreedbyuser"
-      }
-    ],
-    "more": false
-  }
-  JSON
-  command %(cleos get table eosdactoken eosdactoken members), allow_error: true
-  its(:stdout) { is_expected.to eq json_string }
+        },{
+          "sender": "tester1",
+          "agreedterms": "initaltermsagreedbyuser"
+        }
+      ],
+      "more": false
+    }
+    JSON
+  end
 end
 
-describe "Unregister existing member without correct auth" do
-  command %(cleos push action eosdactoken memberunreg '{ "sender": "eosio"}'), allow_error: true
-  its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+describe "Unregister existing member" do
+  context "without correct auth" do
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "eosio"}'), allow_error: true
+    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+  end
+
+  context "with mismatching auth" do
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "eosio"}' -p currency@active), allow_error: true
+    its(:stderr) { is_expected.to include('but does not have signatures for it') }
+  end
+
+  context "with correct auth" do
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "eosio"}' -p eosio@active), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::memberunreg') }
+  end
 end
 
-describe "Unregister existing member reg with mismatching auth" do
-  command %(cleos push action eosdactoken memberunreg '{ "sender": "eosio"}' -p currency@active), allow_error: true
-  its(:stderr) { is_expected.to include('but does not have signatures for it') }
-end
-
-describe "Unregister existing member reg with correct auth" do
-  command %(cleos push action eosdactoken memberunreg '{ "sender": "eosio"}' -p eosio@active), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::memberunreg') }
-end
-
-describe "Read back the result for regmembers has agreed should be 0" do
-  json_string = <<~JSON
-  {
-    "rows": [{
-        "sender": "tester1",
-        "agreedterms": "initaltermsagreedbyuser"
-      }
-    ],
-    "more": false
-  }
-  JSON
-  command %(cleos get table eosdactoken eosdactoken members), allow_error: true
-  its(:stdout) { is_expected.to eq json_string }
+  describe "Read back the result for regmembers has agreed should be 0" do
+    command %(cleos get table eosdactoken eosdactoken members), allow_error: true
+    it do
+      expect(JSON.parse(subject.stdout)).to eq JSON.parse <<-JSON
+      {
+        "rows": [{
+          "sender": "tester1",
+          "agreedterms": "initaltermsagreedbyuser"
+        }
+      ],
+      "more": false
+    }
+    JSON
+  end
 end
