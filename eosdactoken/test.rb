@@ -1,6 +1,15 @@
 require 'rspec_command'
 require "json"
 
+# 1. A recent version of Ruby is required
+# 2. Ensure the required gems are installed with `gem install rspec json rspec-command`
+# 3. Run this from the command line with rspec test.rb
+
+# Optionally output the test results with -f [p|d|h] for required views of the test results.
+
+# For debugging I added a clear action to the contract which clears everything in the tables
+# for a "clean" contract environment but this should not be shipped with the production code.
+
 RSpec.configure do |config|
   config.include RSpecCommand
 end
