@@ -14,7 +14,7 @@
       "base": "",
       "fields": [
         {"name":"sender", "type":"account_name"},
-        {"name":"agreedterms", "type":"string"},
+        {"name":"agreedterms", "type":"string"}
       ]
     },{
       "name": "membereg",
@@ -28,6 +28,28 @@
       "base": "",
       "fields": [
         {"name":"sender", "type":"account_name"}
+      ]
+    },{
+      "name": "memberadd",
+      "base": "",
+      "fields": [
+        {"name":"newmember", "type":"account_name"},
+        {"name":"quantity", "type":"asset"},
+        {"name":"memo", "type":"string"}
+      ]
+    },{
+      "name": "memberraw",
+      "base": "",
+      "fields": [
+        {"name":"sender", "type":"name"},
+        {"name":"quantity", "type":"asset"}
+      ]
+    },{
+      "name": "memberadda",
+      "base": "",
+      "fields": [
+        {"name":"newmembers", "type":"memberraw[]"},
+        {"name":"memo", "type":"string"}
       ]
     },{
      "name": "create",
@@ -106,6 +128,14 @@
     }, {
       "name": "memberunreg",
       "type": "memberunreg",
+      "ricardian_contract": ""
+    }, {
+      "name": "memberadd",
+      "type": "memberadd",
+      "ricardian_contract": ""
+    }, {
+      "name": "memberadda",
+      "type": "memberadda",
       "ricardian_contract": ""
     }, {
       "name": "clear",

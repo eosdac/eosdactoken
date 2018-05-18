@@ -1,4 +1,6 @@
 
+# These are test only keys and should never be used for the production blockchain.
+
 OWNER_PRIVATE_KEY='5Jwehyg2mSmgagZrxN78V3gpFkconKRWJzWVpdgMNdbF4CCcAh6'
 OWNER_PUBLIC_KEY='EOS5zps2homeR9T1MkVwK9Amz9Abqh3PMp3D47t5su2t4VZqKSvBF'
 

@@ -16,4 +16,11 @@ struct member {
     EOSLIB_SERIALIZE(member, (sender)(agreedterms))
 };
 
+struct memberraw {
+  name sender;
+  asset quantity;
+
+  EOSLIB_SERIALIZE(memberraw, (sender)(quantity))
+};
+
 typedef multi_index<N(members), member> regmembers;
