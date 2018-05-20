@@ -59,5 +59,5 @@ def add_accounts_as_members(num)
 
   puts `cleos push action eosdactoken memberadda '{"newmembers":[#{params}], "memo":"air drop balance"}' -p eosdactoken`
 end
-# create_accounts(1000) # Need to only run this line once.
-# add_accounts_as_members(350) # The most I could add in one transaction locally was around 250.
+# create_accounts(100) # Need to only run this line once.
+# add_accounts_as_members(100) # The most I could add in one transaction locally was around 250.

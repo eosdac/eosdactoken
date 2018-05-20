@@ -11,7 +11,7 @@ public:
 
     void memberadd(name newmember, asset quantity, string memo) {
         require_auth(_self);
-        print("adding new account");
+        print("adding a new account");
 
         auto existingMember = registeredgmembers.find(newmember);
         if(existingMember == registeredgmembers.end()) {
