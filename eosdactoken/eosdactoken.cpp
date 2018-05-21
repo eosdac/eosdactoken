@@ -9,6 +9,32 @@ class eosdactoken: public token {
 public:
     eosdactoken(account_name self) : token(self), registeredgmembers(_self, _self) {}
 
+    void burn( asset quantity ) {
+        print( "burn" );
+        auto sym = quantity.symbol.name();
+        stats statstable( _self, sym );
+        const auto& st = statstable.get( sym );
+
+        eosio_assert( quantity.is_valid(), "invalid quantity" );
+        eosio_assert( quantity.amount > 0, "must burn positive quantity" );
+
+        require_auth( st.issuer );
+
+        eosio_assert( st.max_supply - quantity >= st.supply, "burn quantity exceeds available supply");
+
+        statstable.modify( st, 0, [&]( currency_stats& s ) {
+          s.max_supply -= quantity;
+        });
+    }
+
+    void clear(asset sym, account_name owner) {
+        cleanTable<accounts>(_self, owner);
+        cleanTable<stats>(_self, sym.symbol.name());
+        cleanTable<regmembers>(_self, _self);
+
+        print("clearing....");
+    }
+
     void memberadd(name newmember, asset quantity, string memo) {
         require_auth(_self);
         print("adding a new account");
@@ -55,13 +81,6 @@ public:
         auto regMember = registeredgmembers.find(sender);
         eosio_assert(regMember != registeredgmembers.end(), "Member is not registered");
         registeredgmembers.erase(regMember);
-    }
-
-    void clear(asset sym, account_name owner) {
-        cleanTable<regmembers>(_self, _self);
-        token::clear(sym, owner);
-
-        print("clearing.....");
     }
 
 private:

@@ -27,17 +27,17 @@ end
 
 describe "Create a new currency" do
   context "without account auth should fail" do
-    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}'), allow_error: true
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC"}'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with mismatching auth should fail" do
-    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}' -p eosio), allow_error: true
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC"}' -p eosio), allow_error: true
     its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
   end
 
   context "with matching issuer and account auth should succeed." do
-    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "can_freeze": 0, "can_recall": 0, "can_whitelist": 0}' -p eosdactoken), allow_error: true
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC"}' -p eosdactoken), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::create') }
   end
 end
@@ -158,17 +158,17 @@ end
 describe "Member add array" do
 
   context "without owner auth" do
-    command %(cleos push action eosdactoken memberadda '[[[".1.kgbxghfkr", "500.0000 ABC", "air drop balance"]],"memo string"]'), allow_error: true
+    command %(cleos push action eosdactoken memberadda '[[["1..kgbxghfkr", "500.0000 ABC", "air drop balance"]],"memo string"]'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with owner auth" do
-    command %(cleos push action eosdactoken memberadda '{"newmembers":[{"sender":".2.kgbxghfkr", "quantity":"500.0000 ABC"},{"sender":".3.kgbxghfkr", "quantity":"500.0000 ABC"}], "memo":"air drop balance"}' -p eosdactoken), allow_error: true
+    command %(cleos push action eosdactoken memberadda '{"newmembers":[{"sender":"2..kgbxghfkr", "quantity":"500.0000 ABC"},{"sender":"3..kgbxghfkr", "quantity":"500.0000 ABC"}], "memo":"air drop balance"}' -p eosdactoken), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberadda') }
   end
 
   context "with owner auth array params", focus: true do
-    command %(cleos push action eosdactoken memberadda '{"newmembers":[[".4.kgbxghfkr", "51.0000 ABC"],[".5.kgbxghfkr", "45.0000 ABC"],[".a.kgbxghfkr", "12.0000 ABC"],["1..kgbxghfkr", "54.0000 ABC"],["11.kgbxghfkr", "14.0000 ABC"],["12.kgbxghfkr", "75.0000 ABC"]], "memo":"air drop balance"}' -p eosdactoken), allow_error: true
+    command %(cleos push action eosdactoken memberadda '{"newmembers":[["4..kgbxghfkr", "51.0000 ABC"],["5..kgbxghfkr", "45.0000 ABC"],["a..kgbxghfkr", "12.0000 ABC"],["b..kgbxghfkr", "54.0000 ABC"],["c..kgbxghfkr", "14.0000 ABC"],["d..kgbxghfkr", "75.0000 ABC"]], "memo":"air drop balance"}' -p eosdactoken), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberadda') }
   end
 
@@ -187,15 +187,15 @@ describe "Member add array" do
       expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
       {"rows" : [
         {"sender":".1.kgbxghfkr", "agreedterms":""},
-        {"sender":".2.kgbxghfkr", "agreedterms":""},
-        {"sender":".3.kgbxghfkr", "agreedterms":""},
-        {"sender":".4.kgbxghfkr", "agreedterms":""},
-        {"sender":".5.kgbxghfkr", "agreedterms":""},
-        {"sender":".a.kgbxghfkr", "agreedterms":""},
         {"sender":"1..kgbxghfkr", "agreedterms":""},
-        {"sender":"11.kgbxghfkr", "agreedterms":""},
-        {"sender":"12.kgbxghfkr", "agreedterms":""},
-        {"sender":"2..kgbxghfkr", "agreedterms":""}
+        {"sender":"2..kgbxghfkr", "agreedterms":""},
+        {"sender":"3..kgbxghfkr", "agreedterms":""},
+        {"sender":"4..kgbxghfkr", "agreedterms":""},
+        {"sender":"5..kgbxghfkr", "agreedterms":""},
+        {"sender":"a..kgbxghfkr", "agreedterms":""},
+        {"sender":"b..kgbxghfkr", "agreedterms":""},
+        {"sender":"c..kgbxghfkr", "agreedterms":""},
+        {"sender":"d..kgbxghfkr", "agreedterms":""}
       ],
       "more":true}
       JSON
@@ -219,12 +219,12 @@ describe "Member reg" do
   end
 
   context "with valid auth for second account should succeed" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "15.kgbxghfkr", "agreedterms": "initaltermsagreedbyuser"}' -p 15.kgbxghfkr), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "5..kgbxghfkr", "agreedterms": "initaltermsagreedbyuser"}' -p 5..kgbxghfkr), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
   end
 
   context "with valid auth for should succeed" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": ".1.kgbxghfkr", "agreedterms": "initaltermsagreedbyuser"}' -p .1.kgbxghfkr), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "initaltermsagreedbyuser"}' -p 1..kgbxghfkr), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
   end
 
@@ -234,8 +234,8 @@ describe "Member reg" do
       expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
       {
         "rows": [
-          {"sender":".1.kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"},
-          {"sender":"15.kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
+          {"sender":"1..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"},
+          {"sender":"5..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
         ],
         "more": false
       }
@@ -246,17 +246,17 @@ end
 
 describe "Update existing member reg" do
   context "without auth should fail" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": ".1.kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}'), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with mismatching auth should fail" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": ".1.kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('missing authority of .1.kgbxghfkr') }
+    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of 1..kgbxghfkr') }
   end
 
   context "with valid auth" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": ".1.kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}' -p .1.kgbxghfkr@active), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}' -p 1..kgbxghfkr@active), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
   end
 end
@@ -267,8 +267,8 @@ describe "Read back the result for regmembers hasagreed should have entry" do
     expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
     {
       "rows": [
-        {"sender":".1.kgbxghfkr", "agreedterms":"subsequenttermsagreedbyuser"},
-        {"sender":"15.kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
+        {"sender":"1..kgbxghfkr", "agreedterms":"subsequenttermsagreedbyuser"},
+        {"sender":"5..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
       ],
       "more": false
     }
@@ -278,17 +278,17 @@ end
 
 describe "Unregister existing member" do
   context "without correct auth" do
-    command %(cleos push action eosdactoken memberunreg '{ "sender": ".1.kgbxghfkr"}'), allow_error: true
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "1..kgbxghfkr"}'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with mismatching auth" do
-    command %(cleos push action eosdactoken memberunreg '{ "sender": ".1.kgbxghfkr"}' -p currency@active), allow_error: true
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "1..kgbxghfkr"}' -p currency@active), allow_error: true
     its(:stderr) { is_expected.to include('but does not have signatures for it') }
   end
 
   context "with correct auth" do
-    command %(cleos push action eosdactoken memberunreg '{ "sender": ".1.kgbxghfkr"}' -p .1.kgbxghfkr@active), allow_error: true
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "1..kgbxghfkr"}' -p 1..kgbxghfkr@active), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberunreg') }
   end
 end
@@ -299,7 +299,7 @@ describe "Read back the result for regmembers has agreed should be 0" do
     expect(JSON.parse(subject.stdout)).to eq JSON.parse <<-JSON
     {
       "rows": [
-        {"sender":"15.kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
+        {"sender":"5..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
     ],
     "more": false
   }

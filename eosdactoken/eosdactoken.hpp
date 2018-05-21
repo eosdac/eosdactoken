@@ -5,6 +5,15 @@
 using namespace eosio;
 using namespace std;
 
+template <typename T>
+void cleanTable(uint64_t code, uint64_t account){
+  T db(code, account);
+  while(db.begin() != db.end()){
+      auto itr = --db.end();
+      db.erase(itr);
+      }
+}
+
 // @abi table members
 struct member {
     name sender;
