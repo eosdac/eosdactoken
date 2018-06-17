@@ -8,7 +8,8 @@
 namespace eosio {
 
 void token::create( account_name issuer,
-                    asset        maximum_supply )
+                    asset        maximum_supply,
+                    bool         transfer_locked )
 {
     require_auth( _self );
 
@@ -22,12 +23,12 @@ void token::create( account_name issuer,
     eosio_assert( existing == statstable.end(), "token with symbol already exists" );
 
     statstable.emplace( _self, [&]( auto& s ) {
-       s.supply.symbol = maximum_supply.symbol;
-       s.max_supply    = maximum_supply;
-       s.issuer        = issuer;
+       s.supply.symbol   = maximum_supply.symbol;
+       s.max_supply      = maximum_supply;
+       s.issuer          = issuer;
+       s.transfer_locked = transfer_locked;
     });
 }
-
 
 void token::issue( account_name to, asset quantity, string memo )
 {
@@ -41,7 +42,7 @@ void token::issue( account_name to, asset quantity, string memo )
     const auto& st = *existing;
 
     require_auth( st.issuer );
-    eosio_assert( quantity.is_valid(), "invalid quantity" );
+    eosio_assert( quantity.is_valid(), "invalid quantity." );
     eosio_assert( quantity.amount > 0, "must issue positive quantity" );
 
     eosio_assert( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
@@ -58,6 +59,21 @@ void token::issue( account_name to, asset quantity, string memo )
     }
 }
 
+void token::unlock( asset unlock )
+{
+        eosio_assert( unlock.symbol.is_valid(), "invalid symbol name" );
+        auto sym_name = unlock.symbol.name();
+        stats statstable( _self, sym_name );
+        auto token = statstable.find( sym_name );
+        eosio_assert( token != statstable.end(), "token with symbol does not exist, create token before unlock" );
+        const auto& st = *token;
+        require_auth( st.issuer );
+
+        statstable.modify( st, 0, [&]( auto& s ) {
+           s.transfer_locked = false;
+        });
+}
+
 void token::transfer( account_name from,
                       account_name to,
                       asset        quantity,
@@ -69,6 +85,10 @@ void token::transfer( account_name from,
     auto sym = quantity.symbol.name();
     stats statstable( _self, sym );
     const auto& st = statstable.get( sym );
+
+    if ( st.transfer_locked ) {
+        require_auth ( st.issuer );
+    }
 
     require_recipient( from );
     require_recipient( to );

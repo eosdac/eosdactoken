@@ -9,13 +9,17 @@ https://github.com/EOSIO/eos/blob/master/contracts/eosio.token/eosio.token.abi#L
 ## create
 Standard currency create action, will mint a certain number of tokens and credit them to the account mentioned
 
-Default parameters should be false to everything
-
-This shall inherit the system / community decided smart contract
+if `transferred_locked` is set `true` the contract will prevent all transfers except from the token creator.
 
 ## issue
 
-Standard currency action.  Issue tokens and send them to the account specified (standard currency method).  This will require a privileged account.
+Standard currency action. Issue tokens and send them to the account specified (standard currency method).  This will require a privileged account.
+
+## unlock
+
+Unlock a token to allow transfers from accounts other than the token creator. The parameter passed in must be a standard asset in the form of "1000.0000 ABC". Although the amount component eg. 1000.000 is ignored for the logic it is required for the format of an asset parameter.
+
+***This can only be done to `unlock` a token and cannot be reversed to lock a token again.***
 
 ## transfer
 

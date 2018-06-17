@@ -22,9 +22,12 @@ namespace eosio {
          token( account_name self ):contract(self){}
 
          void create( account_name issuer,
-                      asset        maximum_supply);
+                      asset        maximum_supply,
+                      bool         transfer_locked);
 
          void issue( account_name to, asset quantity, string memo );
+
+         void unlock( asset unlock );
 
          void transfer( account_name from,
                         account_name to,
@@ -50,6 +53,7 @@ namespace eosio {
             asset          supply;
             asset          max_supply;
             account_name   issuer;
+            bool           transfer_locked = false;
 
             uint64_t primary_key()const { return supply.symbol.name(); }
          };

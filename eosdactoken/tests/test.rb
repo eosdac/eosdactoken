@@ -20,26 +20,72 @@ RSpec.configure do |config|
 end
 
 describe "Clear all tables first (only for debugging and testing)" do
-  command  %(cleos push action eosdactoken clear '{ "sym": "1.0 ABC", "owner": "eosdactoken"}' -p eosio), allow_error: true
-  its(:stdout) { is_expected.to include('eosdactoken::clear') }
+    command  %(cleos push action eosdactoken clear '{ "sym": "1.0 ABC", "owner": "eosdactoken"}' -p eosio), allow_error: true
+    command  %(cleos push action eosdactoken clear '{ "sym": "1.0 ABD", "owner": "eosdactoken"}' -p eosio), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken::clear') }
   # its(:stderr) { is_expected.to be_nil() }
 end
 
 describe "Create a new currency" do
   context "without account auth should fail" do
-    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC"}'), allow_error: true
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "transfer_locked": false}'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with mismatching auth should fail" do
-    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC"}' -p eosio), allow_error: true
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "transfer_locked": false}' -p eosio), allow_error: true
     its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
   end
 
   context "with matching issuer and account auth should succeed." do
-    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC"}' -p eosdactoken), allow_error: true
+    command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABC", "transfer_locked": false}' -p eosdactoken), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::create') }
   end
+end
+
+context "Locked Tokens - " do
+  context "Create with transfer_locked true" do
+    context "create new token should succeed" do
+      command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABD", "transfer_locked": true}' -p eosdactoken), allow_error: true
+      its(:stdout) { is_expected.to include('eosdactoken::create') }
+    end
+
+    context "Issue tokens with valid auth should succeed" do
+        command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABD", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
+        its(:stdout) { is_expected.to include('eosdactoken::issue') }
+      end
+    end
+
+    context "Transfer with valid issuer auth from locked token should succeed" do
+        command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABD", "memo": "my first transfer"}' --permission eosdactoken@active), allow_error: true
+        its(:stdout) { is_expected.to include('500.0000 ABD') }
+      end
+
+
+    context "Transfer from locked token with non-issuer auth should fail" do
+        command %(cleos push action eosdactoken transfer '{ "from": "1..kgbxghfkr", "to": "eosdactoken", "quantity": "400.0000 ABD", "memo": "my second transfer"}' -p 1..kgbxghfkr), allow_error: true
+        its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+      end
+
+      context "Unlock locked token with non-issuer auth should fail" do
+        command %(cleos push action eosdactoken unlock '{ "unlock": "10000.0000 ABD"}' -p 1..kgbxghfkr), allow_error: true
+        its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+      end
+
+    context "Transfer from locked token with non-issuer auth should fail after failed unlock attempt" do
+        command %(cleos push action eosdactoken transfer '{ "from": "eosio", "to": "eosdactoken", "quantity": "400.0000 ABD", "memo": "my second transfer"}' -p eosio), allow_error: true
+        its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+      end
+
+    context "Unlock locked token with issuer auth should succeed" do
+        command %(cleos push action eosdactoken unlock '{ "unlock": "1.0 ABD"}' -p eosdactoken), allow_error: true
+        its(:stdout) { is_expected.to include('{"unlock":"1.0 ABD"}') }
+    end
+
+    context "Transfer from unlocked token with non-issuer auth should succeed after successful unlock" do
+        command %(cleos push action eosdactoken transfer '{ "from": "eosio", "to": "eosdactoken", "quantity": "400.0000 ABD", "memo": "my second transfer"}' -p eosio), allow_error: true
+        its(:stdout) { is_expected.to include('400.0000 ABD') }
+    end
 end
 
 describe "Issue new currency" do

@@ -27,14 +27,6 @@ public:
         });
     }
 
-    void clear(asset sym, account_name owner) {
-        cleanTable<accounts>(_self, owner);
-        cleanTable<stats>(_self, sym.symbol.name());
-        cleanTable<regmembers>(_self, _self);
-
-        print("clearing....");
-    }
-
     void memberadd(name newmember, asset quantity, string memo) {
         require_auth(_self);
         print("adding a new account");
@@ -83,8 +75,31 @@ public:
         registeredgmembers.erase(regMember);
     }
 
+    // The Following is to help with development and debugging only and should not be included in the final compiled version.
+    // Thankyou to NSJames for the following snippet - *** for development and debugging only. ***
+
+    // template <typename T>
+    // void cleanTable(uint64_t code, uint64_t account){
+    //     T db(code, account);
+    //     while(db.begin() != db.end()){
+    //         auto itr = --db.end();
+    //         db.erase(itr);
+    //     }
+    // }
+
+    void clear(asset sym, account_name owner) {
+        // cleanTable<accounts>(_self, owner);
+        // cleanTable<stats>(_self, sym.symbol.name());
+        // cleanTable<regmembers>(_self, _self);
+
+        // The above 3 code lines and the `cleanTable` function could be included to help with debugging during development.
+        // By commenting these out the lines will have no logical effect.
+        // This is a work around for there is no apparent way of using precompiled directives for eos contracts eg. #if DEBUG ...
+        print("Clearing for debugging and to reset for tests only. Should not be shipped.");
+    }
+
 private:
     regmembers registeredgmembers;
 };
 
-EOSIO_ABI(eosdactoken, (memberreg)(memberunreg)(clear)(create)(issue)(transfer)(burn)(memberadd)(memberadda))
+EOSIO_ABI(eosdactoken, (memberreg)(memberunreg)(clear)(create)(issue)(transfer)(burn)(memberadd)(memberadda)(unlock))

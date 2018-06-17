@@ -60,7 +60,14 @@
      "base": "",
      "fields": [
         {"name":"issuer", "type":"account_name"},
-        {"name":"maximum_supply", "type":"asset"}
+        {"name":"maximum_supply", "type":"asset"},
+        {"name":"transfer_locked", "type":"bool"}
+     ]
+  },{
+     "name": "unlock",
+     "base": "",
+     "fields": [
+        {"name":"unlock", "type":"asset"}
      ]
   },{
      "name": "burn",
@@ -88,7 +95,8 @@
       "fields": [
         {"name":"supply", "type":"asset"},
         {"name":"max_supply", "type":"asset"},
-        {"name":"issuer", "type":"account_name"}
+        {"name":"issuer", "type":"account_name"},
+        {"name":"transfer_locked", "type":"bool"}
       ]
     },{
       "name": "clear",
@@ -114,6 +122,10 @@
     }, {
       "name": "burn",
       "type": "burn",
+      "ricardian_contract": ""
+    },{
+      "name": "unlock",
+      "type": "unlock",
       "ricardian_contract": ""
     }, {
       "name": "memberreg",
