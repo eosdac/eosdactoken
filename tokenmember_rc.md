@@ -32,7 +32,7 @@
 
 **INTENT:** The intent of {{ burn }} is to allow a user to burn {{ $quantity }} tokens that belong to them. 
 
-**TERM:** The action lasts for the duration of the processing of the contract. The reduction in token supply persists persist on the deployed contract as long as it is active.
+**TERM:** The action lasts for the duration of the processing of the contract. The reduction in token supply persists on the deployed contract as long as it is active.
 
 ## ACTION: transfer
 
@@ -42,14 +42,6 @@
 
 **TERM:** The transfer action lasts for the duration of the processing of the contract.
 
-## ACTION: account
-
-**PARAMETERS:** {{ $balance }} is a type of eosio asset
-
-**INTENT:** The intent of {{ account }} is to return the current balance of specified tokens for an account.
-
-**TERM:** This action lasts for the duration of the processing of the contract.
-
 ## ACTION: memberreg
 
 **PARAMETERS:** {{ $sender }} is a type of eosio account_name, {{ $agreedterms }} is a hash reference to a document contained in a string with a maximum of 256 charaters
@@ -57,7 +49,6 @@
 **INTENT:** The intent of {{ memberreg }} is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ $agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.
 
 **TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action.
-
 
 ## ACTION: memberunreg
 
@@ -67,14 +58,6 @@
 
 **TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action.
 
-## ACTION: currency_stats
-
-**PARAMETERS:** returns {{ $supply }} is a type of eosio asset, {{ $max_supply }} is a type of eosio asset, {{ $issuer }} is a type of eosio account_name, {{$transfer_locked}} is either True or False
-
-**INTENT:** The intent of {{ currency_stats }} is to return information about a token as per the create, issue and burn action.
-
-**TERM:** This action lasts for the duration of the processing of the contract.
-
 ## ACTION: memberadd
 
 **PARAMETERS:** {{ $new_member }} is a type of eosio account_name, {{ $quantity }} is a type of eosio asset, {{ $memo }} is a string with a maximum of 256 characters
@@ -82,14 +65,6 @@
 **INTENT:** The intent of {{ memberadd }} is to add an existing account {{ $new member }} to the members db and transfer an amount of tokens {{ $quantity }} to the given account. It must be called from the contract owner account. A note {{ $memo }} can be sent to the receiver.
 
 **TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action.
-
-## ACTION: memberraw
-
-**PARAMETERS:** {{ $sender }} is a type of eosio account_name, {{ $quantity }} is a type of eosio asset
-
-**INTENT:** The intent of {{ memberraw }} is to create an array of new members for use by the memberadda action
-
-**TERM:** This action lasts for the duration of the processing of the contract.
 
 ## ACTION: memberadda
 
