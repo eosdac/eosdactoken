@@ -4,9 +4,9 @@
 
 ## ACTION: create
 
-**PARAMETERS:** {{ $issuer }} is a type of eosio accountname , {{ $maximum_supply }} is a type of asset, {{ $transferred_locked }} is true or false
+**PARAMETERS:** {{ $issuer }} is a type of eosio account_name , {{ $maximum_supply }} is a type of asset, {{ $transferred_locked }} is true or false
 
-**INTENT:** The intent of {{ create }} is to create a new token with a {{ $maximum supply }} as indicated. The asset is created in the format of {{ number of tokens to 4 decimal places < space >  token symbol }} for example 1000.0000 DAC will create a DAC token with a maximum number of units of 1000.0000. If {{ $transfer_locked }} is set to true then only the issuer may use the transfer action. 
+**INTENT:** The intent of {{ create }} is to create a new token with a {{ $maximum supply }} as indicated. The asset is created in the format of {{ number of tokens to 4 decimal places <space>  token symbol }} for example 1000.0000 DAC will create a DAC token with a maximum number of units of 1000.0000. If {{ $transfer_locked }} is set to true then only the issuer may use the transfer action. 
 
 **TERM:** The act of creation of this asset will expires at the conclusion of code execution. The asset will then persist on the deployed contract as long as it is active.
 
