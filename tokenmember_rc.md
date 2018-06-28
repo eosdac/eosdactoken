@@ -32,7 +32,7 @@
 
 **INTENT:** The intent of {{ burn }} is to allow a user to burn {{ quantity }} tokens that belong to them. 
 
-**TERM:** The action lasts for the duration of the processing of the contract. The reduction in token supply persists persist on the deployed contract as long as it is active.
+**TERM:** The action lasts for the duration of the processing of the contract. The reduction in token supply persists on the deployed contract as long as it is active.
 
 ## ACTION: transfer
 
@@ -57,7 +57,6 @@
 **INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.
 
 **TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action.
-
 
 ## ACTION: memberunreg
 
