@@ -34,28 +34,6 @@
         {"name":"sender", "type":"account_name"}
       ]
     },{
-      "name": "memberadd",
-      "base": "",
-      "fields": [
-        {"name":"newmember", "type":"account_name"},
-        {"name":"quantity", "type":"asset"},
-        {"name":"memo", "type":"string"}
-      ]
-    },{
-      "name": "memberraw",
-      "base": "",
-      "fields": [
-        {"name":"sender", "type":"name"},
-        {"name":"quantity", "type":"asset"}
-      ]
-    },{
-      "name": "memberadda",
-      "base": "",
-      "fields": [
-        {"name":"newmembers", "type":"memberraw[]"},
-        {"name":"memo", "type":"string"}
-      ]
-    },{
      "name": "create",
      "base": "",
      "fields": [
@@ -73,6 +51,7 @@
      "name": "burn",
      "base": "",
      "fields": [
+        {"name":"from", "type":"account_name"},
         {"name":"quantity", "type":"asset"}
      ]
   },{
@@ -97,13 +76,6 @@
         {"name":"max_supply", "type":"asset"},
         {"name":"issuer", "type":"account_name"},
         {"name":"transfer_locked", "type":"bool"}
-      ]
-    },{
-      "name": "clear",
-      "base": "",
-      "fields": [
-        {"name":"sym", "type":"asset"},
-        {"name":"owner", "type":"account_name"}
       ]
     }
   ],
@@ -135,20 +107,7 @@
       "name": "memberunreg",
       "type": "memberunreg",
       "ricardian_contract": ""
-    }, {
-      "name": "memberadd",
-      "type": "memberadd",
-      "ricardian_contract": ""
-    }, {
-      "name": "memberadda",
-      "type": "memberadda",
-      "ricardian_contract": ""
-    }, {
-      "name": "clear",
-      "type": "clear",
-      "ricardian_contract": ""
     }
-
   ],
   "tables": [{
       "name": "accounts",
