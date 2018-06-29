@@ -47,6 +47,7 @@ def create_accounts(num)
   accounts.each do |acc|
     puts `cleos create account eosio #{acc} #{ownerPublickey} #{activePublickey}`
   end
+  puts `cleos create account eosio testuser1 #{ownerPublickey} #{activePublickey}`
 end
 
 # create_accounts(1000)
