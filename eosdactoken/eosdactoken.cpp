@@ -138,8 +138,7 @@ void eosdactoken::burn(account_name from, asset quantity ) {
 
     auto sym = quantity.symbol.name();
     stats statstable( _self, sym );
-    const auto& st = statstable.find(sym);
-    eosio_assert( st != statstable.end(), "Attempting to burn a token unknown to this contract");
+    const auto& st = statstable.get(sym, "Attempting to burn a token unknown to this contract");
     eosio_assert( !st.transfer_locked, "Burn tokens on transferLocked token. The issuer must `unlock` first" );
     require_recipient( from );
 

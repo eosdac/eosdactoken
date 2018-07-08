@@ -38,7 +38,7 @@
  (table 8 8 anyfunc)
  (elem (i32.const 0) $__wasm_nullptr $_ZN6eosdac11eosdactoken4burnEyN5eosio5assetE $_ZN6eosdac11eosdactoken8transferEyyN5eosio5assetENSt3__112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEE $_ZN6eosdac11eosdactoken5issueEyN5eosio5assetENSt3__112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEE $_ZN6eosdac11eosdactoken6unlockEN5eosio5assetE $_ZN6eosdac11eosdactoken9memberregEN5eosio4nameENSt3__112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEE $_ZN6eosdac11eosdactoken11memberunregEN5eosio4nameE $_ZN6eosdac11eosdactoken6createEyN5eosio5assetEb)
  (memory $0 1)
- (data (i32.const 4) "ph\00\00")
+ (data (i32.const 4) "\b0h\00\00")
  (data (i32.const 16) "invalid symbol name\00")
  (data (i32.const 48) "invalid supply\00")
  (data (i32.const 64) "max-supply must be positive\00")
@@ -76,16 +76,17 @@
  (data (i32.const 1376) "cannot erase objects in table of another contract\00")
  (data (i32.const 1440) "attempt to remove object that was not in multi_index\00")
  (data (i32.const 1504) "burn\00")
- (data (i32.const 1520) "Burn tokens on transferLocked token. The issuer must `unlock` first\00")
- (data (i32.const 1600) "must burn positive quantity\00")
- (data (i32.const 1632) "get\00")
- (data (i32.const 1648) "Member is not registered\00")
- (data (i32.const 1680) "cannot pass end iterator to erase\00")
- (data (i32.const 1728) "cannot increment end iterator\00")
- (data (i32.const 1760) "onerror\00")
- (data (i32.const 1776) "eosio\00")
- (data (i32.const 1792) "onerror action\'s are only valid from the \"eosio\" system account\00")
- (data (i32.const 10256) "malloc_from_freed was designed to only be called after _heap was completely allocated\00")
+ (data (i32.const 1520) "Attempting to burn a token unknown to this contract\00")
+ (data (i32.const 1584) "Burn tokens on transferLocked token. The issuer must `unlock` first\00")
+ (data (i32.const 1664) "must burn positive quantity\00")
+ (data (i32.const 1696) "get\00")
+ (data (i32.const 1712) "Member is not registered\00")
+ (data (i32.const 1744) "cannot pass end iterator to erase\00")
+ (data (i32.const 1792) "cannot increment end iterator\00")
+ (data (i32.const 1824) "onerror\00")
+ (data (i32.const 1840) "eosio\00")
+ (data (i32.const 1856) "onerror action\'s are only valid from the \"eosio\" system account\00")
+ (data (i32.const 10320) "malloc_from_freed was designed to only be called after _heap was completely allocated\00")
  (export "memory" (memory $0))
  (export "_ZeqRK11checksum256S1_" (func $_ZeqRK11checksum256S1_))
  (export "_ZeqRK11checksum160S1_" (func $_ZeqRK11checksum160S1_))
@@ -8442,13 +8443,13 @@
         (i32.const 40)
        )
        (get_local $7)
-       (i32.const 1088)
+       (i32.const 1520)
       )
      )
     )
     (i32.const 1)
    )
-   (i32.const 1520)
+   (i32.const 1584)
   )
   (call $require_recipient
    (get_local $1)
@@ -8565,7 +8566,7 @@
     (get_local $5)
     (i64.const 0)
    )
-   (i32.const 1600)
+   (i32.const 1664)
   )
   (call $eosio_assert
    (i64.eq
@@ -10900,7 +10901,7 @@
       (get_local $2)
      )
     )
-    (i32.const 1632)
+    (i32.const 1696)
    )
    (set_local $4
     (i32.load8_u
@@ -11238,15 +11239,15 @@
      (i32.const 0)
     )
    )
-   (i32.const 1648)
+   (i32.const 1712)
   )
   (call $eosio_assert
    (get_local $6)
-   (i32.const 1680)
+   (i32.const 1744)
   )
   (call $eosio_assert
    (get_local $6)
-   (i32.const 1728)
+   (i32.const 1792)
   )
   (block $label$4
    (br_if $label$4
@@ -11613,7 +11614,7 @@
    (i64.const 59)
   )
   (set_local $6
-   (i32.const 1760)
+   (i32.const 1824)
   )
   (set_local $9
    (i64.const 0)
@@ -11754,7 +11755,7 @@
     (i64.const 59)
    )
    (set_local $6
-    (i32.const 1776)
+    (i32.const 1840)
    )
    (set_local $9
     (i64.const 0)
@@ -11886,7 +11887,7 @@
      (get_local $9)
      (get_local $1)
     )
-    (i32.const 1792)
+    (i32.const 1856)
    )
   )
   (block $label$13
@@ -11904,7 +11905,7 @@
      (i64.const 59)
     )
     (set_local $6
-     (i32.const 1760)
+     (i32.const 1824)
     )
     (set_local $9
      (i64.const 0)
@@ -15657,7 +15658,7 @@
  )
  (func $malloc (param $0 i32) (result i32)
   (call $_ZN5eosio14memory_manager6mallocEm
-   (i32.const 1856)
+   (i32.const 1920)
    (get_local $0)
   )
  )
@@ -15902,7 +15903,7 @@
          )
         )
        )
-       (i32.const 10256)
+       (i32.const 10320)
       )
       (set_local $13
        (i32.add
@@ -16126,13 +16127,13 @@
    (block $label$1
     (br_if $label$1
      (i32.eqz
-      (i32.load8_u offset=10342
+      (i32.load8_u offset=10406
        (i32.const 0)
       )
      )
     )
     (set_local $7
-     (i32.load offset=10344
+     (i32.load offset=10408
       (i32.const 0)
      )
     )
@@ -16141,11 +16142,11 @@
    (set_local $7
     (current_memory)
    )
-   (i32.store8 offset=10342
+   (i32.store8 offset=10406
     (i32.const 0)
     (i32.const 1)
    )
-   (i32.store offset=10344
+   (i32.store offset=10408
     (i32.const 0)
     (tee_local $7
      (i32.shl
@@ -16196,7 +16197,7 @@
        )
       )
       (set_local $3
-       (i32.load offset=10344
+       (i32.load offset=10408
         (i32.const 0)
        )
       )
@@ -16204,7 +16205,7 @@
      (set_local $8
       (i32.const 0)
      )
-     (i32.store offset=10344
+     (i32.store offset=10408
       (i32.const 0)
       (get_local $3)
      )
@@ -16258,18 +16259,18 @@
      )
      (block $label$6
       (br_if $label$6
-       (i32.load8_u offset=10342
+       (i32.load8_u offset=10406
         (i32.const 0)
        )
       )
       (set_local $3
        (current_memory)
       )
-      (i32.store8 offset=10342
+      (i32.store8 offset=10406
        (i32.const 0)
        (i32.const 1)
       )
-      (i32.store offset=10344
+      (i32.store offset=10408
        (i32.const 0)
        (tee_local $3
         (i32.shl
@@ -16337,12 +16338,12 @@
        )
       )
       (set_local $6
-       (i32.load offset=10344
+       (i32.load offset=10408
         (i32.const 0)
        )
       )
      )
-     (i32.store offset=10344
+     (i32.store offset=10408
       (i32.const 0)
       (i32.add
        (get_local $6)
@@ -16602,7 +16603,7 @@
     (br_if $label$1
      (i32.lt_s
       (tee_local $2
-       (i32.load offset=10240
+       (i32.load offset=10304
         (i32.const 0)
        )
       )
@@ -16610,7 +16611,7 @@
      )
     )
     (set_local $3
-     (i32.const 10048)
+     (i32.const 10112)
     )
     (set_local $1
      (i32.add
@@ -16618,7 +16619,7 @@
        (get_local $2)
        (i32.const 12)
       )
-      (i32.const 10048)
+      (i32.const 10112)
      )
     )
     (loop $label$2
@@ -16710,7 +16711,7 @@
     (br_if $label$0
      (i32.eqz
       (tee_local $2
-       (i32.load offset=10348
+       (i32.load offset=10412
         (i32.const 0)
        )
       )
