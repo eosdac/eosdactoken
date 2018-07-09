@@ -102,6 +102,6 @@
 
 This contract contains the entire agreement of the parties, for all described actions, and there are no other promises or conditions in any other agreement whether oral or written concerning the subject matter of this Contract. This contract supersedes any prior written or oral agreements between the parties. 
 
-## BINDING CONSTIUTUION: 
+## BINDING CONSTITUTION: 
 
 All the the action descibed in this contract are subject to the EOSDAC consitution as held at http://eosdac.io . This includes, but is not limited to membership terms and condiutions, dispute resolution and severability.  
