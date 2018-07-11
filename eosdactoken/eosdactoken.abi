@@ -37,7 +37,7 @@
 			}
 		]
 	}, {
-		"name": "membereg",
+		"name": "memberreg",
 		"base": "",
 		"fields": [{
 				"name": "sender",
@@ -156,7 +156,7 @@
 		"ricardian_contract": "## ACTION: unlock\n**PARAMETERS:** __unlock__ is a type of asset\n**INTENT:** The intent of {{ unlock }} is to unlock a token to allow transfers from accounts other than the token creator. The parameter passed in must be a standard asset in the form of \" 1000.0000 ABC\". Although the amount component eg. 1000.000 is ignored for the logic it is required for the format of an asset parameter. This can only be done once to unlock a token and cannot be reversed to lock a token again.\n**TERM:** The act of unlocking transfer on this asset will expires at the conclusion of code execution. Transfer functionality for the asset will then persist on the deployed contract as long as it is active."
 	}, {
 		"name": "memberreg",
-		"type": "membereg",
+		"type": "memberreg",
 		"ricardian_contract": "## ACTION: memberreg\n**PARAMETERS:** __sender__ is a type of eosio account_name, __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 charaters\n**INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action."
 	}, {
 		"name": "memberunreg",
