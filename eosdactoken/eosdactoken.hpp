@@ -19,15 +19,32 @@ using namespace std;
 
 struct member {
     name sender;
-    /// Hash of agreed terms
-    string agreedterms;
+  // agreed terms version
+  uint64_t agreedtermsversion;
 
     name primary_key() const { return sender; }
 
-    EOSLIB_SERIALIZE(member, (sender)(agreedterms))
+    EOSLIB_SERIALIZE(member, (sender)(agreedtermsversion))
+};
+
+struct terms {
+  string ipfs;
+  uint64_t version;
+
+  terms()
+    : ipfs(""), version(0)
+  {}
+
+  terms(string _ipfs, uint64_t _version)
+    : ipfs(_ipfs), version(_version)
+  {}
+
+  uint64_t primary_key() const { return version; }
+  EOSLIB_SERIALIZE(terms, (ipfs)(version))
 };
 
 typedef multi_index<N(members), member> regmembers;
+typedef multi_index<N(memberterms), terms> memterms;
 
 namespace eosdac {
 
@@ -35,7 +52,7 @@ namespace eosdac {
 
    class eosdactoken : public contract {
       public:
-         eosdactoken(account_name self) : contract(self), registeredgmembers(_self, _self) {}
+     eosdactoken(account_name self) : contract(self), registeredgmembers(_self, _self), memberterms(_self, _self) {}
 
          void create( account_name issuer,
                       asset        maximum_supply,
@@ -52,7 +69,9 @@ namespace eosdac {
                         asset        quantity,
                         string       memo );
 
-         void memberreg(name sender, string agreedterms);
+         void newmemterms(string ipfs);
+
+         void memberreg(name sender);
 
          void memberunreg(name sender);
 
@@ -65,7 +84,7 @@ namespace eosdac {
          inline asset get_balance( account_name owner, symbol_name sym )const;
 
          regmembers registeredgmembers;
-
+         memterms memberterms;
 
       public:
          struct account {
