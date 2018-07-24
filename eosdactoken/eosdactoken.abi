@@ -5,10 +5,14 @@
 		"type": "name"
 	}],
 	"structs": [{
-        "name": "terms",
+        "name": "termsinfo",
         "base": "",
         "fields": [{
-                "name": "ipfs",
+                "name": "terms",
+                "type": "string"
+            },
+            {
+                "name": "hash",
                 "type": "string"
             },
             {
@@ -54,7 +58,11 @@
 		"fields": [{
 				"name": "sender",
 				"type": "account_name"
-			}
+		    },
+            {
+                "name": "agreedterms",
+                "type": "string"
+            }
 		]
 	}, {
 		"name": "memberunreg",
@@ -90,9 +98,14 @@
 		"name": "newmemterms",
 		"base": "",
 		"fields": [{
-			"name": "ipfs",
-			"type": "string"
-		}]
+                "name": "terms",
+                "type": "string"
+		    },
+            {
+                "name": "hash",
+                "type": "string"
+            }
+        ]
     }, {
 		"name": "burn",
 		"base": "",
@@ -172,11 +185,11 @@
 	}, {
 		"name": "newmemterms",
 		"type": "newmemterms",
-		"ricardian_contract": "## ACTION: newmemterms\n**PARAMETERS:** __memberterms__ is an sha256 IPFS hash reference to a document contained in a string with a maximum of 46 charaters\n**INTENT:** The intent of newmemberterms is to update the terms of the DAC. It will update an internal database of member terms. This action must supply the hash of the agreement in {{ memberterms }}, and can be called multiple times to update the hash.\n**TERM:** This action lasts for the duration of the processing of the contract. The memberterm will persist on the deployed contract as long as it is active or superceeded by an updated newmemberterms action."
+		"ricardian_contract": "## ACTION: newmemterms\n**PARAMETERS:** __terms__ is a string with a maximum of 256 charaters containing a url to a member terms document. __hash__ is a string with a maximum of 32 characters containing the md5 hash of the terms document.\n**INTENT:** The intent of newmemberterms is to update the terms of the DAC. It will update an internal database of member terms. This action can be called multiple times to add revisions to the DAC terms.\n**TERM:** This action lasts for the duration of the processing of the contract. The memberterm will persist on the deployed contract as long as it is active or superceeded by an updated newmemberterms action."
     }, {
 		"name": "memberreg",
 		"type": "memberreg",
-		"ricardian_contract": "## ACTION: memberreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of memberreg is to indicate that the account has agreed to the current terms of the DAC. It will update an internal database of member accounts tracking the member agreed terms. It can be called multiple times to agree to the current terms.\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action."
+		"ricardian_contract": "## ACTION: memberreg\n**PARAMETERS:** __sender__ is a type of eosio account_name , __agreedterms__ is the md5 hash of the current agreed member terms document. \n**INTENT:** The intent of memberreg is to register the account and indicate that the account has agreed to the current terms of the DAC. It will validate that the agreed terms are current and update an internal database of member accounts. It can be called multiple times to update the agreed terms.\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action."
 	}, {
 		"name": "memberunreg",
 		"type": "memberunreg",
@@ -184,7 +197,7 @@
 	}],
 	"tables": [{
         "name": "memberterms",
-        "type": "terms",
+        "type": "termsinfo",
         "index_type": "i64",
         "key_names": ["currency"],
         "key_types": ["uint64"]

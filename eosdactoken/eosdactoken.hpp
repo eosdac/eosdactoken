@@ -19,32 +19,33 @@ using namespace std;
 
 struct member {
     name sender;
-  // agreed terms version
-  uint64_t agreedtermsversion;
+    // agreed terms version
+    uint64_t agreedtermsversion;
 
     name primary_key() const { return sender; }
 
     EOSLIB_SERIALIZE(member, (sender)(agreedtermsversion))
 };
 
-struct terms {
-  string ipfs;
+struct termsinfo {
+  string terms;
+  string hash;
   uint64_t version;
 
-  terms()
-    : ipfs(""), version(0)
+  termsinfo()
+    : terms(""), hash(""), version(0)
   {}
 
-  terms(string _ipfs, uint64_t _version)
-    : ipfs(_ipfs), version(_version)
+  termsinfo(string _terms, string _hash, uint64_t _version)
+    : terms(_terms), hash(_hash), version(_version)
   {}
 
   uint64_t primary_key() const { return version; }
-  EOSLIB_SERIALIZE(terms, (ipfs)(version))
+  EOSLIB_SERIALIZE(termsinfo, (terms)(hash)(version))
 };
 
 typedef multi_index<N(members), member> regmembers;
-typedef multi_index<N(memberterms), terms> memterms;
+typedef multi_index<N(memberterms), termsinfo> memterms;
 
 namespace eosdac {
 
@@ -69,9 +70,9 @@ namespace eosdac {
                         asset        quantity,
                         string       memo );
 
-         void newmemterms(string ipfs);
+         void newmemterms(string terms, string hash);
 
-         void memberreg(name sender);
+         void memberreg(name sender, string agreedterms);
 
          void memberunreg(name sender);
 
