@@ -5,6 +5,8 @@
 
 #include "eosdactoken.hpp"
 
+#include <algorithm>
+
 namespace eosdac {
 
 void eosdactoken::create( account_name issuer,
@@ -153,18 +155,50 @@ void eosdactoken::burn(account_name from, asset quantity ) {
     });
 }
 
-void eosdactoken::memberreg(name sender, string agreedterms) {
+  void eosdactoken::newmemterms(string terms, string hash) {
+    // print("In newmemterms(). ");
+
+    require_auth( _self );
+
+    // sample IPFS: QmXjkFQjnD8i8ntmwehoAHBfJEApETx8ebScyVzAHqgjpD
+    eosio_assert( !terms.empty(), "Member terms cannot be empty." );
+    eosio_assert( terms.length() <= 256 , "Member terms document url should be less than 256 characters long." );
+
+    eosio_assert( !hash.empty(), "Member terms document hash cannot be empty." );
+    eosio_assert( hash.length() <= 32 , "Member terms document hash should be less than 32 characters long." );
+
+    // guard against duplicate of latest
+    if (memberterms.begin() != memberterms.end()) {
+      auto last = --memberterms.end();
+      eosio_assert( !(terms == last->terms && hash == last->hash ), "Next member terms cannot be duplicate of the latest." );
+    }
+
+    uint64_t next_version = (memberterms.begin() == memberterms.end() ? 0 : (--memberterms.end())->version) + 1;
+
+    memberterms.emplace(_self, [&](termsinfo& termsinfo) {
+        termsinfo.terms = terms;
+        termsinfo.hash = hash;
+        termsinfo.version = next_version;
+      });
+  }
+
+  void eosdactoken::memberreg(name sender, string agreedterms) {
+    // agreedterms is expected to be the member terms document hash
     require_auth(sender);
+    eosio_assert( memberterms.begin() != memberterms.end(), "No valid member terms found." );
+
+    auto latest_member_terms = (--memberterms.end());
+    eosio_assert( latest_member_terms->hash == agreedterms, "Agreed terms isn't the latest." );
 
     auto existingMember = registeredgmembers.find(sender);
     if (existingMember != registeredgmembers.end()) {
         registeredgmembers.modify(existingMember, _self, [&](member& mem){
-            mem.agreedterms = agreedterms;
+            mem.agreedtermsversion = latest_member_terms->version;
         });
     } else {
         registeredgmembers.emplace(_self, [&](member& mem) {
             mem.sender = sender;
-            mem.agreedterms = agreedterms;
+            mem.agreedtermsversion = latest_member_terms->version;
         });
     }
 }
@@ -179,4 +213,4 @@ void eosdactoken::memberunreg(name sender) {
 
 } /// namespace eosdac
 
-EOSIO_ABI(eosdac::eosdactoken, (memberreg)(memberunreg)(create)(issue)(transfer)(burn)(unlock))
+EOSIO_ABI(eosdac::eosdactoken, (memberreg)(memberunreg)(create)(issue)(transfer)(burn)(newmemterms)(unlock))
