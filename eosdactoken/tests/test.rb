@@ -1,6 +1,5 @@
 require 'rspec_command'
 require "json"
-require_relative './accounts_helper'
 
 
 # 1. A recent version of Ruby is required
@@ -19,10 +18,56 @@ RSpec.configure do |config|
   config.include RSpecCommand
 end
 
-describe "Prepare for test run from a clean chain" do
-    puts `eosio_helpers_create_and_unlock_account.sh`
-    puts `eosio_helpers_compile_and_upload.sh`
-    puts `ruby tests/create_accounts.rb`
+CONTRACT_OWNER_PRIVATE_KEY='5Jwehyg2mSmgagZrxN78V3gpFkconKRWJzWVpdgMNdbF4CCcAh6'
+CONTRACT_OWNER_PUBLIC_KEY='EOS5zps2homeR9T1MkVwK9Amz9Abqh3PMp3D47t5su2t4VZqKSvBF'
+
+CONTRACT_ACTIVE_PRIVATE_KEY='5JQmkJXivc4JzV7GzakAnbRKm1Kz7m5KKWW8UdkZW3KpBibtB99'
+CONTRACT_ACTIVE_PUBLIC_KEY='EOS5uKFiNf8jpNvFukgoLMCLtWrb3Ps7UNBDvm32xSqGchCX6FD7T'
+
+CONTRACT_NAME='eosdactoken'
+ACCOUNT_NAME='eosdactoken'
+
+beforescript = <<~SHELL
+  set -x
+  kill -INT `pgrep nodeos`
+  nodeos --delete-all-blocks  &>/dev/null &
+  sleep 1.0
+  cleos wallet import #{CONTRACT_ACTIVE_PRIVATE_KEY}
+  cleos create account eosio #{ACCOUNT_NAME} #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+
+  # create accounts for tests
+  cleos create account eosio testuser1 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  cleos create account eosio testuser2 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  cleos create account eosio testuser3 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+
+  if [[ $? != 0 ]] 
+    then 
+    echo "Failed to create contract account" 
+    exit 1
+  fi
+  # eosiocpp -g #{CONTRACT_NAME}.abi #{CONTRACT_NAME}.cpp
+  eosiocpp -o #{CONTRACT_NAME}.wast *.cpp
+  if [[ $? != 0 ]] 
+    then 
+    echo "failed to compile contract" 
+    exit 1
+  fi
+  cd ..
+  cleos set contract #{ACCOUNT_NAME} #{CONTRACT_NAME} -p #{ACCOUNT_NAME}
+  echo `pwd`
+
+SHELL
+
+
+describe "eosdactoken" do
+  before(:all) do
+    `#{beforescript}`
+    exit() unless $? == 0
+  end
+
+  context "Seed accounts for tests" do
+    it {expect(true)}
+  end
 end
 
 describe "Create a new currency" do
@@ -62,13 +107,13 @@ context "Locked Tokens - " do
 
 
     context "Transfer from locked token with non-issuer auth should fail" do
-        command %(cleos push action eosdactoken transfer '{ "from": "1..kgbxghfkr", "to": "eosdactoken", "quantity": "400.0000 ABP", "memo": "my second transfer"}' -p 1..kgbxghfkr), allow_error: true
-        its(:stderr) { is_expected.to include('Ensure that you have the related authority inside your transaction!') }
+        command %(cleos push action eosdactoken transfer '{ "from": "tester3", "to": "eosdactoken", "quantity": "400.0000 ABP", "memo": "my second transfer"}' -p tester3), allow_error: true
+        its(:stderr) { is_expected.to include('Ensure that you have the related private keys inside your wallet and your wallet is unlocked.') }
       end
 
       context "Unlock locked token with non-issuer auth should fail" do
-        command %(cleos push action eosdactoken unlock '{ "unlock": "10000.0000 ABP"}' -p 1..kgbxghfkr), allow_error: true
-        its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+        command %(cleos push action eosdactoken unlock '{ "unlock": "10000.0000 ABP"}' -p tester3), allow_error: true
+        its(:stderr) { is_expected.to include('Ensure that you have the related private keys inside your wallet and your wallet is unlocked') }
       end
 
     context "Transfer from locked token with non-issuer auth should fail after failed unlock attempt" do
@@ -184,7 +229,9 @@ describe "Unlock tokens" do
     end
 
     context "with auth should succeed" do
-        puts `cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABX", "transfer_locked": true}' -p eosdactoken`
+      before do
+          puts `cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABX", "transfer_locked": true}' -p eosdactoken`
+      end
         command %(cleos push action eosdactoken unlock '{"unlock": "9500.0000 ABX"}' -p eosdactoken), allow_error: true
         its(:stdout) { is_expected.to include('eosdactoken <= eosdactoken::unlock') }
     end
@@ -192,13 +239,15 @@ end
 
 describe "Burn tokens" do
   context "before unlocking token should fail" do
-    puts `cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABZ", "transfer_locked": true}' -p eosdactoken`
+    before do
+      puts `cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABZ", "transfer_locked": true}' -p eosdactoken`
+    end
     command %(cleos push action eosdactoken burn '{"from": "eosdactoken", "quantity": "9500.0000 ABZ"}' -p eosdactoken), allow_error: true
     its(:stderr) { is_expected.to include('Burn tokens on transferLocked token. The issuer must `unlock` first') }
   end
 
   context "After unlocking token" do
-    before do
+    before(:all) do
         puts `cleos push action eosdactoken unlock '{"unlock": "9500.0000 ABP"}' -p eosdactoken`
     end
 
@@ -242,28 +291,57 @@ describe "Read back the stats after burning currency should display reduced supp
     end
   end
 
+describe "newmemterms" do
+  context "without valid auth" do
+    command %(cleos push action eosdactoken newmemterms '{ "terms": "New Latest terms", "hash": "termshashsdsdsd"}' -p tester1), allow_error: true
+    its(:stderr) { is_expected.to include('Ensure that you have the related private keys inside your wallet and your wallet is unlocked') }
+  end
+
+  context "without empty terms" do
+    command %(cleos push action eosdactoken newmemterms '{ "terms": "", "hash": "termshashsdsdsd"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('Member terms cannot be empty') }
+  end
+
+  context "with long terms" do
+    command %(cleos push action eosdactoken newmemterms '{ "terms": "aasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdf", "hash": "termshashsdsdsd"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('Member terms document url should be less than 256 characters long.') }
+  end
+
+  context "without empty hash" do
+    command %(cleos push action eosdactoken newmemterms '{ "terms": "normallegalterms", "hash": ""}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('Member terms document hash cannot be empty.') }
+  end
+
+  context "with long hash" do
+    command %(cleos push action eosdactoken newmemterms '{ "terms": "normallegalterms", "hash": "asdfasdfasdfasdfasdfasdfasdfasdfl"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('Member terms document hash should be less than 32 characters long.') }
+  end
+
+  context "with valid terms and hash" do
+    command %(cleos push action eosdactoken newmemterms '{ "terms": "normallegalterms", "hash": "asdfasdfasdfasdfasdfasd"}' -p eosdactoken), allow_error: true
+    its(:stdout) { is_expected.to include('eosdactoken <= eosdactoken::newmemterms') }
+  end
+
+
+end
+
 describe "Member reg" do
   before(:all) do
-    `cleos push action eosdactoken clear '{ "sym": "1.0 ABC", "owner": "eosdactoken"}' -p eosio`
+  puts "before stufff"
   end
 
   context "without auth should fail" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}'), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "New Latest terms"}'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with mismatching auth should fail" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "initaltermsagreedbyuser"}' -p eosdactoken), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "New Latest terms"}' -p eosdactoken), allow_error: true
     its(:stderr) { is_expected.to include('missing authority of eosio') }
   end
 
   context "with valid auth for second account should succeed" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "5..kgbxghfkr", "agreedterms": "initaltermsagreedbyuser"}' -p 5..kgbxghfkr), allow_error: true
-    its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
-  end
-
-  context "with valid auth for should succeed" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "initaltermsagreedbyuser"}' -p 1..kgbxghfkr), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "testuser2", "agreedterms": "asdfasdfasdfasdfasdfasd"}' -p testuser2), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
   end
 
@@ -273,8 +351,7 @@ describe "Member reg" do
       expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
       {
         "rows": [
-          {"sender":"1..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"},
-          {"sender":"5..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
+          {"sender":"testuser2", "agreedterms":1}
         ],
         "more": false
       }
@@ -284,18 +361,22 @@ describe "Member reg" do
 end
 
 describe "Update existing member reg" do
+  before(:all) do 
+    puts `cleos push action eosdactoken newmemterms '{ "terms": "normallegalterms2", "hash": "dfghdfghdfghdfghdfg"}' -p eosdactoken`
+  end
+  
   context "without auth should fail" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}'), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "tester3", "agreedterms": "subsequenttermsagreedbyuser"}'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with mismatching auth should fail" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('missing authority of 1..kgbxghfkr') }
+    command %(cleos push action eosdactoken memberreg '{ "sender": "tester3", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken), allow_error: true
+    its(:stderr) { is_expected.to include('missing authority of tester3') }
   end
 
   context "with valid auth" do
-    command %(cleos push action eosdactoken memberreg '{ "sender": "1..kgbxghfkr", "agreedterms": "subsequenttermsagreedbyuser"}' -p 1..kgbxghfkr@active), allow_error: true
+    command %(cleos push action eosdactoken memberreg '{ "sender": "testuser3", "agreedterms": "dfghdfghdfghdfghdfg"}' -p testuser3@active), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberreg') }
   end
 end
@@ -306,8 +387,8 @@ describe "Read back the result for regmembers hasagreed should have entry" do
     expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
     {
       "rows": [
-        {"sender":"1..kgbxghfkr", "agreedterms":"subsequenttermsagreedbyuser"},
-        {"sender":"5..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
+        {"sender":"testuser2", "agreedterms":1},
+        {"sender":"testuser3", "agreedterms":2}
       ],
       "more": false
     }
@@ -317,17 +398,17 @@ end
 
 describe "Unregister existing member" do
   context "without correct auth" do
-    command %(cleos push action eosdactoken memberunreg '{ "sender": "1..kgbxghfkr"}'), allow_error: true
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "testuser3"}'), allow_error: true
     its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
   end
 
   context "with mismatching auth" do
-    command %(cleos push action eosdactoken memberunreg '{ "sender": "1..kgbxghfkr"}' -p currency@active), allow_error: true
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "testuser3"}' -p currency@active), allow_error: true
     its(:stderr) { is_expected.to include('but does not have signatures for it') }
   end
 
   context "with correct auth" do
-    command %(cleos push action eosdactoken memberunreg '{ "sender": "1..kgbxghfkr"}' -p 1..kgbxghfkr@active), allow_error: true
+    command %(cleos push action eosdactoken memberunreg '{ "sender": "testuser3"}' -p testuser3@active), allow_error: true
     its(:stdout) { is_expected.to include('eosdactoken::memberunreg') }
   end
 end
@@ -338,7 +419,7 @@ describe "Read back the result for regmembers has agreed should be 0" do
     expect(JSON.parse(subject.stdout)).to eq JSON.parse <<-JSON
     {
       "rows": [
-        {"sender":"5..kgbxghfkr", "agreedterms":"initaltermsagreedbyuser"}
+        {"sender":"testuser2", "agreedterms":1}
     ],
     "more": false
   }

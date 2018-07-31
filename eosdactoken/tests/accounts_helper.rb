@@ -47,11 +47,7 @@ def create_accounts(num)
   accounts.each do |acc|
     puts `cleos create account eosio #{acc} #{ownerPublickey} #{activePublickey}`
   end
-  puts `cleos create account eosio testuser1 #{ownerPublickey} #{activePublickey}`
 end
-
-# create_accounts(1000)
-# exit 0
 
 def add_accounts_as_members(num)
 
@@ -60,5 +56,3 @@ def add_accounts_as_members(num)
 
   puts `cleos push action eosdactoken memberadda '{"newmembers":[#{params}], "memo":"air drop balance"}' -p eosdactoken`
 end
-# create_accounts(30) # Need to only run this line once.
-# add_accounts_as_members(30) # The most I could add in one transaction locally was around 250.
