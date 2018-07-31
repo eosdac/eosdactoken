@@ -192,11 +192,11 @@ void eosdactoken::burn(account_name from, asset quantity ) {
 
     auto existingMember = registeredgmembers.find(sender);
     if (existingMember != registeredgmembers.end()) {
-        registeredgmembers.modify(existingMember, _self, [&](member& mem){
+        registeredgmembers.modify(existingMember, sender, [&](member& mem){
             mem.agreedtermsversion = latest_member_terms->version;
         });
     } else {
-        registeredgmembers.emplace(_self, [&](member& mem) {
+        registeredgmembers.emplace(sender, [&](member& mem) {
             mem.sender = sender;
             mem.agreedtermsversion = latest_member_terms->version;
         });
