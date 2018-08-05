@@ -18,11 +18,11 @@ RSpec.configure do |config|
   config.include RSpecCommand
 end
 
-CONTRACT_OWNER_PRIVATE_KEY='5Jwehyg2mSmgagZrxN78V3gpFkconKRWJzWVpdgMNdbF4CCcAh6'
-CONTRACT_OWNER_PUBLIC_KEY='EOS5zps2homeR9T1MkVwK9Amz9Abqh3PMp3D47t5su2t4VZqKSvBF'
+CONTRACT_OWNER_PRIVATE_KEY='5K86iZz9h8jwgGDttMPcHqFHHru5ueqnfDs5fVSHfm8bJt8PjK6'
+CONTRACT_OWNER_PUBLIC_KEY='EOS6Y1fKGLVr2zEFKKfAmRUoH1LzM7crJEBi4dL5ikYeGYqiJr6SS'
 
-CONTRACT_ACTIVE_PRIVATE_KEY='5JQmkJXivc4JzV7GzakAnbRKm1Kz7m5KKWW8UdkZW3KpBibtB99'
-CONTRACT_ACTIVE_PUBLIC_KEY='EOS5uKFiNf8jpNvFukgoLMCLtWrb3Ps7UNBDvm32xSqGchCX6FD7T'
+CONTRACT_ACTIVE_PRIVATE_KEY='5Jbf3f26fz4HNWXVAd3TMYHnC68uu4PtkMnbgUa5mdCWmgu47sR'
+CONTRACT_ACTIVE_PUBLIC_KEY='EOS7rjn3r52PYd2ppkVEKYvy6oRDP9MZsJUPB2MStrak8LS36pnTZ'
 
 CONTRACT_NAME='eosdactoken'
 ACCOUNT_NAME='eosdactoken'
@@ -31,29 +31,30 @@ beforescript = <<~SHELL
   set -x
   kill -INT `pgrep nodeos`
   nodeos --delete-all-blocks  &>/dev/null &
-  sleep 1.0
-  cleos wallet import #{CONTRACT_ACTIVE_PRIVATE_KEY}
-  cleos create account eosio #{ACCOUNT_NAME} #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  sleep 2.0
+  cleos wallet unlock --password `cat ~/eosio-wallet/.pass`
+  cleos wallet import --private-key #{CONTRACT_ACTIVE_PRIVATE_KEY}
+  cleos create account eosio #{ACCOUNT_NAME} #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
 
   # create accounts for tests
-  cleos create account eosio testuser1 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-  cleos create account eosio testuser2 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
-  cleos create account eosio testuser3 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY}
+  cleos create account eosio testuser1 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
+  cleos create account eosio testuser2 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
+  cleos create account eosio testuser3 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
 
   if [[ $? != 0 ]] 
     then 
     echo "Failed to create contract account" 
     exit 1
   fi
-  # eosiocpp -g #{CONTRACT_NAME}.abi #{CONTRACT_NAME}.cpp
-  eosiocpp -o #{CONTRACT_NAME}.wast *.cpp
+  # eosio-cpp -g #{CONTRACT_NAME}.abi #{CONTRACT_NAME}.cpp
+  # eosio-cpp -o #{CONTRACT_NAME}.wast *.cpp -v
   if [[ $? != 0 ]] 
     then 
     echo "failed to compile contract" 
     exit 1
   fi
   cd ..
-  cleos set contract #{ACCOUNT_NAME} #{CONTRACT_NAME} -p #{ACCOUNT_NAME}
+  cleos set contract #{ACCOUNT_NAME} #{CONTRACT_NAME} -p #{ACCOUNT_NAME} -j
   echo `pwd`
 
 SHELL
@@ -73,12 +74,12 @@ end
 describe "Create a new currency" do
   context "without account auth should fail" do
     command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABY", "transfer_locked": false}'), allow_error: true
-    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+    its(:stderr) { is_expected.to include('Error 3040003') }
   end
 
   context "with mismatching auth should fail" do
     command %(cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABY", "transfer_locked": false}' -p eosio), allow_error: true
-    its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+    its(:stderr) { is_expected.to include('Error 3090004') }
   end
 
   context "with matching issuer and account auth should succeed." do
@@ -118,7 +119,7 @@ context "Locked Tokens - " do
 
     context "Transfer from locked token with non-issuer auth should fail after failed unlock attempt" do
         command %(cleos push action eosdactoken transfer '{ "from": "eosio", "to": "eosdactoken", "quantity": "400.0000 ABP", "memo": "my second transfer"}' -p eosio), allow_error: true
-        its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+        its(:stderr) { is_expected.to include('Error 3090004') }
       end
 
     context "Unlock locked token with issuer auth should succeed" do
@@ -150,17 +151,17 @@ end
 describe "Issue new currency" do
   context "without valid auth should fail" do
     command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABY", "memo": "Initial amount of tokens for you."}'), allow_error: true
-    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+    its(:stderr) { is_expected.to include('Transaction should have at least one required authority') }
   end
 
   context "without owner auth should fail" do
     command %(cleos push action eosdactoken issue '{ "to": "tester1", "quantity": "1000.0000 ABY", "memo": "Initial amount of tokens for you."} -p tester1'), allow_error: true
-    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+    its(:stderr) { is_expected.to include('Transaction should have at least one required authority') }
   end
 
   context "with mismatching auth should fail" do
     command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "1000.0000 ABY", "memo": "Initial amount of tokens for you."}' -p eosio), allow_error: true
-    its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+    its(:stderr) { is_expected.to include('Error 3090004') }
   end
 
   context "with valid auth should succeed" do
@@ -170,7 +171,7 @@ describe "Issue new currency" do
 
   context "greater than max should fail" do
     command %(cleos push action eosdactoken issue '{ "to": "eosdactoken", "quantity": "11000.0000 ABY", "memo": "Initial amount of tokens for you."}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('quantity exceeds available supply') }
+    its(:stderr) { is_expected.to include('Error 3050003') }
   end
 
   context "for inflation with valid auth should succeed" do
@@ -197,12 +198,12 @@ end
 describe "Transfer some tokens" do
   context "without auth should fail" do
     command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABY", "memo": "my first transfer"}'), allow_error: true
-    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+    its(:stderr) { is_expected.to include('Transaction should have at least one required authority') }
   end
 
   context "with mismatching auth should fail" do
     command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABY", "memo": "my first transfer"}' -p eosio), allow_error: true
-    its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+    its(:stderr) { is_expected.to include('Error 3090004') }
   end
 
   context "with valid auth should succeed" do
@@ -212,7 +213,7 @@ describe "Transfer some tokens" do
 
   context "with amount greater than balance should fail" do
     command %(cleos push action eosdactoken transfer '{ "from": "eosio", "to": "eosdactoken", "quantity": "50000.0000 ABY", "memo": "my first transfer"}' -p eosio), allow_error: true
-    its(:stderr) { is_expected.to include('overdrawn balance') }
+    its(:stderr) { is_expected.to include('Error 3050003') }
   end
 end
 
@@ -225,7 +226,7 @@ end
 describe "Unlock tokens" do
     context "without auth should fail" do
       command %(cleos push action eosdactoken unlock '{"unlock": "9500.0000 ABP"}'), allow_error: true
-      its(:stderr) { is_expected.to include('transaction should have at least one required authority') }
+      its(:stderr) { is_expected.to include('Error 3040003') }
     end
 
     context "with auth should succeed" do
@@ -243,7 +244,7 @@ describe "Burn tokens" do
       puts `cleos push action eosdactoken create '{ "issuer": "eosdactoken", "maximum_supply": "10000.0000 ABZ", "transfer_locked": true}' -p eosdactoken`
     end
     command %(cleos push action eosdactoken burn '{"from": "eosdactoken", "quantity": "9500.0000 ABZ"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('Burn tokens on transferLocked token. The issuer must `unlock` first') }
+    its(:stderr) { is_expected.to include('Error 3050003') }
   end
 
   context "After unlocking token" do
@@ -256,17 +257,17 @@ describe "Burn tokens" do
             puts `cleos push action eosdactoken transfer '{"from": "eosdactoken", "to": "testuser1", "quantity": "900.0000 ABP", "memo": "anything"}' -p eosdactoken`
         end
         command %(cleos push action eosdactoken burn '{"from": "testuser1", "quantity": "9600.0000 ABP"}' -p testuser1), allow_error: true
-        its(:stderr) { is_expected.to include('overdrawn balance') }
+        its(:stderr) { is_expected.to include('Error 3050003') }
     end
 
     context "without auth should fail" do
         command %(cleos push action eosdactoken burn '{ "from": "eosdactoken","quantity": "500.0000 ABP"}'), allow_error: true
-        its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+        its(:stderr) { is_expected.to include('Transaction should have at least one required authority') }
     end
 
     context "with wrong auth should fail" do
         command %(cleos push action eosdactoken burn '{"from": "eosdactoken", "quantity": "500.0000 ABP"}' -p eosio), allow_error: true
-        its(:stderr) { is_expected.to include('missing authority of eosdactoken') }
+        its(:stderr) { is_expected.to include('Error 3090004') }
     end
 
     context "with legal amount of tokens should succeed" do
@@ -299,22 +300,22 @@ describe "newmemterms" do
 
   context "without empty terms" do
     command %(cleos push action eosdactoken newmemterms '{ "terms": "", "hash": "termshashsdsdsd"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('Member terms cannot be empty') }
+    its(:stderr) { is_expected.to include('Error 3050003') }
   end
 
   context "with long terms" do
     command %(cleos push action eosdactoken newmemterms '{ "terms": "aasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdfasdfasdfasddasdf", "hash": "termshashsdsdsd"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('Member terms document url should be less than 256 characters long.') }
+    its(:stderr) { is_expected.to include('Error 3050003') }
   end
 
   context "without empty hash" do
     command %(cleos push action eosdactoken newmemterms '{ "terms": "normallegalterms", "hash": ""}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('Member terms document hash cannot be empty.') }
+    its(:stderr) { is_expected.to include('Error 3050003') }
   end
 
   context "with long hash" do
     command %(cleos push action eosdactoken newmemterms '{ "terms": "normallegalterms", "hash": "asdfasdfasdfasdfasdfasdfasdfasdfl"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('Member terms document hash should be less than 32 characters long.') }
+    its(:stderr) { is_expected.to include('Error 3050003') }
   end
 
   context "with valid terms and hash" do
@@ -332,12 +333,12 @@ describe "Member reg" do
 
   context "without auth should fail" do
     command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "New Latest terms"}'), allow_error: true
-    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+    its(:stderr) { is_expected.to include('Transaction should have at least one required authority') }
   end
 
   context "with mismatching auth should fail" do
     command %(cleos push action eosdactoken memberreg '{ "sender": "eosio", "agreedterms": "New Latest terms"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('missing authority of eosio') }
+    its(:stderr) { is_expected.to include('Error 3090004') }
   end
 
   context "with valid auth for second account should succeed" do
@@ -367,12 +368,12 @@ describe "Update existing member reg" do
   
   context "without auth should fail" do
     command %(cleos push action eosdactoken memberreg '{ "sender": "tester3", "agreedterms": "subsequenttermsagreedbyuser"}'), allow_error: true
-    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+    its(:stderr) { is_expected.to include('Transaction should have at least one required authority') }
   end
 
   context "with mismatching auth should fail" do
     command %(cleos push action eosdactoken memberreg '{ "sender": "tester3", "agreedterms": "subsequenttermsagreedbyuser"}' -p eosdactoken), allow_error: true
-    its(:stderr) { is_expected.to include('missing authority of tester3') }
+    its(:stderr) { is_expected.to include('Error 3090004') }
   end
 
   context "with valid auth" do
@@ -399,12 +400,12 @@ end
 describe "Unregister existing member" do
   context "without correct auth" do
     command %(cleos push action eosdactoken memberunreg '{ "sender": "testuser3"}'), allow_error: true
-    its(:stderr) { is_expected.to include('transaction must have at least one authorization') }
+    its(:stderr) { is_expected.to include('Transaction should have at least one required authority') }
   end
 
   context "with mismatching auth" do
     command %(cleos push action eosdactoken memberunreg '{ "sender": "testuser3"}' -p currency@active), allow_error: true
-    its(:stderr) { is_expected.to include('but does not have signatures for it') }
+    its(:stderr) { is_expected.to include('Error 3090003') }
   end
 
   context "with correct auth" do
