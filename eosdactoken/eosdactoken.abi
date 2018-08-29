@@ -161,7 +161,14 @@
 				"type": "bool"
 			}
 		]
-	}],
+	}, {
+       		"name": "updateconfig",
+       		"base": "",
+       		"fields": [{
+       			"name": "notifycontr",
+       			"type": "name"
+       		}]
+       	}],
 	"actions": [{
 		"name": "transfer",
 		"type": "transfer",
@@ -194,7 +201,11 @@
 		"name": "memberunreg",
 		"type": "memberunreg",
 		"ricardian_contract": "## ACTION: memberunreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister it's membership.\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
-	}],
+	}, {
+       		"name": "updateconfig",
+       		"type": "updateconfig",
+       		"ricardian_contract": "## ACTION: memberunreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of updateconfig is to allow an admin account {{ sender }} to update configuration settings on the contract.\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
+       	}],
 	"tables": [{
         "name": "memberterms",
         "type": "termsinfo",
@@ -219,7 +230,17 @@
 		"index_type": "i64",
 		"key_names": ["sender"],
 		"key_types": ["uint64"]
-	}],
+	}, {
+       	"name": "config",
+       	"index_type": "i64",
+       	"key_names": [
+       		"config"
+       	],
+       	"key_types": [
+       		"name"
+       	],
+       	"type": "updateconfig"
+    },],
 	"ricardian_clauses": [{
 			"id": "entire_agreement",
 			"body": "## ENTIRE AGREEMENT.\nThis contract contains the entire agreement of the parties, for all described actions, and there are no other promises or conditions in any other agreement whether oral or written concerning the subject matter of this Contract. This contract supersedes any prior written or oral agreements between the parties. "
