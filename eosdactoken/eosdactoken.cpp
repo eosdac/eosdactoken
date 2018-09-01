@@ -204,6 +204,18 @@ namespace eosdac {
         config_singleton.set(newconfig, _self);
     };
 
+    void eosdactoken::updateterms(uint64_t termsid, string newterms) {
+
+        require_auth(_self);
+
+       auto existingterms = memberterms.find(termsid);
+       eosio_assert(existingterms != memberterms.end(), "Existing terms not found for the given ID");
+       
+        memberterms.modify(existingterms, 0, [&](termsinfo &t) {
+            t.terms = newterms;
+        });
+    }
+
     void eosdactoken::memberunreg(name sender) {
         require_auth(sender);
 
@@ -221,4 +233,4 @@ namespace eosdac {
 } /// namespace eosdac
 
 EOSIO_ABI(eosdac::eosdactoken, (memberreg)(memberunreg)(create)(issue)(transfer)(burn)(newmemterms)(unlock)
-(updateconfig))
+(updateconfig)(updateterms))

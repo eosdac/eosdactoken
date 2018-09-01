@@ -5,22 +5,32 @@
 		"type": "name"
 	}],
 	"structs": [{
-        "name": "termsinfo",
-        "base": "",
-        "fields": [{
-                "name": "terms",
-                "type": "string"
-            },
-            {
-                "name": "hash",
-                "type": "string"
-            },
-            {
-                "name": "version",
-                "type": "int64"
-            }
-        ]
-    }, {
+		"name": "updateterms",
+		"base": "",
+		"fields": [{
+			"name": "termsid",
+			"type": "int64"
+		}, {
+			"name": "newterms",
+			"type": "string"
+		}]
+	}, {
+		"name": "termsinfo",
+		"base": "",
+		"fields": [{
+				"name": "terms",
+				"type": "string"
+			},
+			{
+				"name": "hash",
+				"type": "string"
+			},
+			{
+				"name": "version",
+				"type": "int64"
+			}
+		]
+	}, {
 		"name": "transfer",
 		"base": "",
 		"fields": [{
@@ -58,11 +68,11 @@
 		"fields": [{
 				"name": "sender",
 				"type": "account_name"
-		    },
-            {
-                "name": "agreedterms",
-                "type": "string"
-            }
+			},
+			{
+				"name": "agreedterms",
+				"type": "string"
+			}
 		]
 	}, {
 		"name": "memberunreg",
@@ -98,15 +108,15 @@
 		"name": "newmemterms",
 		"base": "",
 		"fields": [{
-                "name": "terms",
-                "type": "string"
-		    },
-            {
-                "name": "hash",
-                "type": "string"
-            }
-        ]
-    }, {
+				"name": "terms",
+				"type": "string"
+			},
+			{
+				"name": "hash",
+				"type": "string"
+			}
+		]
+	}, {
 		"name": "burn",
 		"base": "",
 		"fields": [{
@@ -162,14 +172,18 @@
 			}
 		]
 	}, {
-       		"name": "updateconfig",
-       		"base": "",
-       		"fields": [{
-       			"name": "notifycontr",
-       			"type": "name"
-       		}]
-       	}],
+		"name": "updateconfig",
+		"base": "",
+		"fields": [{
+			"name": "notifycontr",
+			"type": "name"
+		}]
+	}],
 	"actions": [{
+		"name": "updateterms",
+		"type": "updateterms",
+		"ricardian_contract": "## ACTION: update the link for the terms for a pre-existing record of member terms based on a given version id.\n**TERM:** The transfer action lasts for the duration of the processing of the contract."
+	}, {
 		"name": "transfer",
 		"type": "transfer",
 		"ricardian_contract": "## ACTION: transfer\n**PARAMETERS:** __from__ is a type of eosio account_name, __to__ is a type of eosio account_name, __quantity__ is a type of eosio asset, __memo__ is a string with a maximum of 256 characters\n**INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.\n**TERM:** The transfer action lasts for the duration of the processing of the contract."
@@ -193,7 +207,7 @@
 		"name": "newmemterms",
 		"type": "newmemterms",
 		"ricardian_contract": "## ACTION: newmemterms\n**PARAMETERS:** __terms__ is a string with a maximum of 256 charaters containing a url to a member terms document. __hash__ is a string with a maximum of 32 characters containing the md5 hash of the terms document.\n**INTENT:** The intent of newmemberterms is to update the terms of the DAC. It will update an internal database of member terms. This action can be called multiple times to add revisions to the DAC terms.\n**TERM:** This action lasts for the duration of the processing of the contract. The memberterm will persist on the deployed contract as long as it is active or superceeded by an updated newmemberterms action."
-    }, {
+	}, {
 		"name": "memberreg",
 		"type": "memberreg",
 		"ricardian_contract": "## ACTION: memberreg\n**PARAMETERS:** __sender__ is a type of eosio account_name , __agreedterms__ is the md5 hash of the current agreed member terms document. \n**INTENT:** The intent of memberreg is to register the account and indicate that the account has agreed to the current terms of the DAC. It will validate that the agreed terms are current and update an internal database of member accounts. It can be called multiple times to update the agreed terms.\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action."
@@ -202,17 +216,17 @@
 		"type": "memberunreg",
 		"ricardian_contract": "## ACTION: memberunreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister it's membership.\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
 	}, {
-       		"name": "updateconfig",
-       		"type": "updateconfig",
-       		"ricardian_contract": "## ACTION: memberunreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of updateconfig is to allow an admin account {{ sender }} to update configuration settings on the contract.\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
-       	}],
+		"name": "updateconfig",
+		"type": "updateconfig",
+		"ricardian_contract": "## ACTION: memberunreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of updateconfig is to allow an admin account {{ sender }} to update configuration settings on the contract.\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
+	}],
 	"tables": [{
-        "name": "memberterms",
-        "type": "termsinfo",
-        "index_type": "i64",
-        "key_names": ["currency"],
-        "key_types": ["uint64"]
-    },{
+		"name": "memberterms",
+		"type": "termsinfo",
+		"index_type": "i64",
+		"key_names": ["currency"],
+		"key_types": ["uint64"]
+	}, {
 		"name": "accounts",
 		"type": "account",
 		"index_type": "i64",
@@ -231,16 +245,16 @@
 		"key_names": ["sender"],
 		"key_types": ["uint64"]
 	}, {
-       	"name": "config",
-       	"index_type": "i64",
-       	"key_names": [
-       		"config"
-       	],
-       	"key_types": [
-       		"name"
-       	],
-       	"type": "updateconfig"
-    },],
+		"name": "config",
+		"index_type": "i64",
+		"key_names": [
+			"config"
+		],
+		"key_types": [
+			"name"
+		],
+		"type": "updateconfig"
+	}],
 	"ricardian_clauses": [{
 			"id": "entire_agreement",
 			"body": "## ENTIRE AGREEMENT.\nThis contract contains the entire agreement of the parties, for all described actions, and there are no other promises or conditions in any other agreement whether oral or written concerning the subject matter of this Contract. This contract supersedes any prior written or oral agreements between the parties. "

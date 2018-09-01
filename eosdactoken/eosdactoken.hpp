@@ -55,13 +55,16 @@ struct termsinfo {
             : terms(_terms), hash(_hash), version(_version) {}
 
     uint64_t primary_key() const { return version; }
+    uint64_t by_latest_version() const { return UINT64_MAX - version; }
 
-    EOSLIB_SERIALIZE(termsinfo, (terms)(hash)(version)
-    )
+  EOSLIB_SERIALIZE(termsinfo, (terms)(hash)(version))
 };
 
 typedef multi_index<N(members), member> regmembers;
-typedef multi_index<N(memberterms), termsinfo> memterms;
+
+typedef multi_index<N(memberterms), termsinfo,
+        indexed_by<N(bylatestver), const_mem_fun<termsinfo, account_name, &termsinfo::by_latest_version> >
+> memterms;
 
 namespace eosdac {
 
@@ -97,6 +100,8 @@ namespace eosdac {
         void memberunreg(name sender);
 
         void updateconfig(name notifycontr);
+
+        void updateterms(uint64_t termsid, string terms);
 
     private:
 
