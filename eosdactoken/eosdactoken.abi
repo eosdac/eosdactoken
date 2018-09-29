@@ -182,11 +182,11 @@
 	"actions": [{
 		"name": "updateterms",
 		"type": "updateterms",
-		"ricardian_contract": "## ACTION: update the link for the terms for a pre-existing record of member terms based on a given version id.\n**TERM:** The transfer action lasts for the duration of the processing of the contract."
+		"ricardian_contract": "## ACTION: updateterms\n**PARAMETERS:** __termsid__ is a whole number, __newterms__ is a text string with a maximum of 256 characters.\n**INTENT:** The intent of {{ updateterms }} is to change the URL link specifying where the terms of a pre-existing record of member terms are located, associated with the given version {{ termsid }}.\n**TERM:** The update terms action lasts until it is superceded by a subsequent action."
 	}, {
 		"name": "transfer",
 		"type": "transfer",
-		"ricardian_contract": "## ACTION: transfer\n**PARAMETERS:** __from__ is a type of eosio account_name, __to__ is a type of eosio account_name, __quantity__ is a type of eosio asset, __memo__ is a string with a maximum of 256 characters\n**INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.\n**TERM:** The transfer action lasts for the duration of the processing of the contract."
+		"ricardian_contract": "## ACTION: transfer\n**PARAMETERS:** __from__ is a type of eosio account_name, __to__ is a type of eosio account_name, __quantity__ is a type of eosio asset, __memo__ is a string with a maximum of 256 characters\n**INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.\n**TERM:** The transfer action represents a change in the asset balances of the accounts involved in the transaction."
 	}, {
 		"name": "issue",
 		"type": "issue",
@@ -214,7 +214,7 @@
 	}, {
 		"name": "memberunreg",
 		"type": "memberunreg",
-		"ricardian_contract": "## ACTION: memberunreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister it's membership.\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
+		"ricardian_contract": "## ACTION: memberunreg\n**PARAMETERS:** __sender__ is a type of eosio account_name\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
 	}, {
 		"name": "updateconfig",
 		"type": "updateconfig",
