@@ -6,10 +6,14 @@
 #include "eosdactoken.hpp"
 
 #include <algorithm>
-
 namespace eosdac {
+    eosdactoken::eosdactoken( name s, name code, datastream<const char*> ds )
+    :contract(s,code,ds),
+        registeredgmembers(_self, _self.value),
+        memberterms(_self, _self.value),
+        config_singleton(_self, _self.value) {}
 
-    void eosdactoken::create(account_name issuer,
+    void eosdactoken::create(name issuer,
                              asset maximum_supply,
                              bool transfer_locked) {
         require_auth(_self);
@@ -19,8 +23,8 @@ namespace eosdac {
         eosio_assert(maximum_supply.is_valid(), "invalid supply");
         eosio_assert(maximum_supply.amount > 0, "max-supply must be positive");
 
-        stats statstable(_self, sym.name());
-        auto existing = statstable.find(sym.name());
+        stats statstable(_self, sym.code().raw());
+        auto existing = statstable.find(sym.code().raw());
         eosio_assert(existing == statstable.end(), "token with symbol already exists");
 
         statstable.emplace(_self, [&](auto &s) {
@@ -31,11 +35,11 @@ namespace eosdac {
         });
     }
 
-    void eosdactoken::issue(account_name to, asset quantity, string memo) {
+    void eosdactoken::issue(name to, asset quantity, string memo) {
         auto sym = quantity.symbol;
         eosio_assert(sym.is_valid(), "invalid symbol name");
 
-        auto sym_name = sym.name();
+        auto sym_name = sym.code().raw();
         stats statstable(_self, sym_name);
         auto existing = statstable.find(sym_name);
         eosio_assert(existing != statstable.end(), "token with symbol does not exist, create token before issue");
@@ -48,41 +52,41 @@ namespace eosdac {
         eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
         eosio_assert(quantity.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply");
 
-        statstable.modify(st, 0, [&](auto &s) {
+        statstable.modify(st, name{}, [&](auto &s) {
             s.supply += quantity;
         });
 
         add_balance(st.issuer, quantity, st, st.issuer);
 
         if (to != st.issuer) {
-            SEND_INLINE_ACTION(*this, transfer, {st.issuer, N(active)}, {st.issuer, to, quantity, memo});
+            SEND_INLINE_ACTION(*this, transfer, {st.issuer, "active"_n}, {st.issuer, to, quantity, memo});
         }
     }
 
     void eosdactoken::unlock(asset unlock) {
         eosio_assert(unlock.symbol.is_valid(), "invalid symbol name");
-        auto sym_name = unlock.symbol.name();
+        auto sym_name = unlock.symbol.code().raw();
         stats statstable(_self, sym_name);
         auto token = statstable.find(sym_name);
         eosio_assert(token != statstable.end(), "token with symbol does not exist, create token before unlock");
         const auto &st = *token;
         require_auth(st.issuer);
 
-        statstable.modify(st, 0, [&](auto &s) {
+        statstable.modify(st, name{}, [&](auto &s) {
             s.transfer_locked = false;
         });
     }
 
-    void eosdactoken::transfer(account_name from,
-                               account_name to,
+    void eosdactoken::transfer(name from,
+                               name to,
                                asset quantity,
                                string       /*memo*/) {
         eosio_assert(from != to, "cannot transfer to self");
         require_auth(from);
         eosio_assert(is_account(to), "to account does not exist");
-        auto sym = quantity.symbol.name();
-        stats statstable(_self, sym);
-        const auto &st = statstable.get(sym);
+        auto sym = quantity.symbol.code();
+        stats statstable(_self, sym.raw());
+        const auto &st = statstable.get(sym.raw());
 
         if (st.transfer_locked) {
             require_auth(st.issuer);
@@ -97,10 +101,10 @@ namespace eosdac {
         add_balance(to, quantity, st, from);
     }
 
-    void eosdactoken::sub_balance(account_name owner, asset value, const currency_stats &st) {
-        accounts from_acnts(_self, owner);
+    void eosdactoken::sub_balance(name owner, asset value, const currency_stats &st) {
+        accounts from_acnts(_self, owner.value);
 
-        const auto &from = from_acnts.get(value.symbol.name());
+        const auto &from = from_acnts.get(value.symbol.code().raw());
         eosio_assert(from.balance.amount >= value.amount, "overdrawn balance");
 
 
@@ -113,27 +117,27 @@ namespace eosdac {
         }
     }
 
-    void eosdactoken::add_balance(account_name owner, asset value, const currency_stats &st, account_name ram_payer) {
-        accounts to_acnts(_self, owner);
-        auto to = to_acnts.find(value.symbol.name());
+    void eosdactoken::add_balance(name owner, asset value, const currency_stats &st, name ram_payer) {
+        accounts to_acnts(_self, owner.value);
+        auto to = to_acnts.find(value.symbol.code().raw());
         if (to == to_acnts.end()) {
             to_acnts.emplace(ram_payer, [&](auto &a) {
                 a.balance = value;
             });
         } else {
-            to_acnts.modify(to, 0, [&](auto &a) {
+            to_acnts.modify(to, name{}, [&](auto &a) {
                 a.balance += value;
             });
         }
     }
 
-    void eosdactoken::burn(account_name from, asset quantity) {
+    void eosdactoken::burn(name from, asset quantity) {
         print("burn");
         require_auth(from);
 
-        auto sym = quantity.symbol.name();
-        stats statstable(_self, sym);
-        const auto &st = statstable.get(sym, "Attempting to burn a token unknown to this contract");
+        auto sym = quantity.symbol.code();
+        stats statstable(_self, sym.raw());
+        const auto &st = statstable.get(sym.raw(), "Attempting to burn a token unknown to this contract");
         eosio_assert(!st.transfer_locked, "Burn tokens on transferLocked token. The issuer must `unlock` first");
         require_recipient(from);
 
@@ -143,7 +147,7 @@ namespace eosdac {
 
         sub_balance(from, quantity, st);
 
-        statstable.modify(st, 0, [&](currency_stats &s) {
+        statstable.modify(st, name{}, [&](currency_stats &s) {
             s.supply -= quantity;
         });
     }
@@ -184,7 +188,7 @@ namespace eosdac {
         auto latest_member_terms = (--memberterms.end());
         eosio_assert(latest_member_terms->hash == agreedterms, "Agreed terms isn't the latest.");
 
-        auto existingMember = registeredgmembers.find(sender);
+        auto existingMember = registeredgmembers.find(sender.value);
         if (existingMember != registeredgmembers.end()) {
             registeredgmembers.modify(existingMember, sender, [&](member &mem) {
                 mem.agreedtermsversion = latest_member_terms->version;
@@ -200,7 +204,7 @@ namespace eosdac {
     void eosdactoken::updateconfig(name notifycontr) {
         require_auth(_self);
 
-        contr_config newconfig{notifycontr};
+        eosdactoken::contr_config newconfig{notifycontr};
         config_singleton.set(newconfig, _self);
     };
 
@@ -210,8 +214,8 @@ namespace eosdac {
 
        auto existingterms = memberterms.find(termsid);
        eosio_assert(existingterms != memberterms.end(), "Existing terms not found for the given ID");
-       
-        memberterms.modify(existingterms, 0, [&](termsinfo &t) {
+
+        memberterms.modify(existingterms, name{}, [&](termsinfo &t) {
             t.terms = newterms;
         });
     }
@@ -219,18 +223,26 @@ namespace eosdac {
     void eosdactoken::memberunreg(name sender) {
         require_auth(sender);
 
-        auto regMember = registeredgmembers.find(sender);
+        auto regMember = registeredgmembers.find(sender.value);
         eosio_assert(regMember != registeredgmembers.end(), "Member is not registered");
         registeredgmembers.erase(regMember);
     }
 
-    contr_config eosdactoken::configs() {
-        contr_config conf = config_singleton.get_or_default(contr_config());
+    eosdactoken::contr_config eosdactoken::configs() {
+        eosdactoken::contr_config conf = config_singleton.get_or_default(contr_config());
         config_singleton.set(conf, _self);
         return conf;
     }
+}
 
-} /// namespace eosdac
-
-EOSIO_ABI(eosdac::eosdactoken, (memberreg)(memberunreg)(create)(issue)(transfer)(burn)(newmemterms)(unlock)
-(updateconfig)(updateterms))
+EOSIO_DISPATCH(eosdac::eosdactoken,
+                (memberreg)
+                (memberunreg)
+                (create)
+                (issue)
+                (transfer)
+                (burn)
+                (newmemterms)
+                (unlock)
+                (updateconfig)
+                (updateterms))

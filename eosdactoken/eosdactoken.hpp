@@ -18,98 +18,106 @@ namespace eosiosystem {
 using namespace eosio;
 using namespace std;
 
-struct contr_config {
-
-    //The additional account to notify of any transfers. Currently used to maintain "live" vote counts.
-    account_name notifycontr = eosio::string_to_name("dacelections");
-
-    EOSLIB_SERIALIZE(contr_config,
-    (notifycontr)
-
-    )
-};
-
-typedef singleton<N(config), contr_config> configscontainer;
-
-
-struct member {
-    name sender;
-    // agreed terms version
-    uint64_t agreedtermsversion;
-
-    name primary_key() const { return sender; }
-
-    EOSLIB_SERIALIZE(member, (sender)(agreedtermsversion)
-    )
-};
-
-struct termsinfo {
-    string terms;
-    string hash;
-    uint64_t version;
-
-    termsinfo()
-            : terms(""), hash(""), version(0) {}
-
-    termsinfo(string _terms, string _hash, uint64_t _version)
-            : terms(_terms), hash(_hash), version(_version) {}
-
-    uint64_t primary_key() const { return version; }
-    uint64_t by_latest_version() const { return UINT64_MAX - version; }
-
-  EOSLIB_SERIALIZE(termsinfo, (terms)(hash)(version))
-};
-
-typedef multi_index<N(members), member> regmembers;
-
-typedef multi_index<N(memberterms), termsinfo,
-        indexed_by<N(bylatestver), const_mem_fun<termsinfo, account_name, &termsinfo::by_latest_version> >
-> memterms;
-
 namespace eosdac {
 
     using std::string;
 
-    class eosdactoken : public contract {
+    class [[eosio::contract("eosdactoken")]] eosdactoken : public contract {
     public:
-        eosdactoken(account_name self)
-                : contract(self),
-                  registeredgmembers(_self, _self),
-                  memberterms(_self, _self),
-                  config_singleton(_self, _self) {}
 
-        void create(account_name issuer,
+        using contract::contract;
+        eosdactoken( name s, name code, datastream<const char*> ds );
+
+        [[eosio::action]]
+        void create(name issuer,
                     asset maximum_supply,
                     bool transfer_locked);
 
-        void issue(account_name to, asset quantity, string memo);
+        [[eosio::action]]
+        void issue(name to, asset quantity, string memo);
 
+        [[eosio::action]]
         void unlock(asset unlock);
 
-        void burn(account_name from, asset quantity);
+        [[eosio::action]]
+        void burn(name from, asset quantity);
 
-        void transfer(account_name from,
-                      account_name to,
+        [[eosio::action]]
+        void transfer(name from,
+                      name to,
                       asset quantity,
                       string memo);
 
+        [[eosio::action]]
         void newmemterms(string terms, string hash);
 
+        [[eosio::action]]
         void memberreg(name sender, string agreedterms);
 
+        [[eosio::action]]
         void memberunreg(name sender);
 
+        [[eosio::action]]
         void updateconfig(name notifycontr);
 
+        [[eosio::action]]
         void updateterms(uint64_t termsid, string terms);
 
     private:
 
+        struct contr_config {
+
+            //The additional account to notify of any transfers. Currently used to maintain "live" vote counts.
+            name notifycontr = "dacelections"_n;
+
+            EOSLIB_SERIALIZE(contr_config,
+            (notifycontr)
+
+            )
+        };
+
+        typedef singleton<"config"_n, contr_config> configscontainer;
+
+
+        struct [[eosio::table, eosio::contract("eosdactoken")]] member {
+            name sender;
+            // agreed terms version
+            uint64_t agreedtermsversion;
+
+            uint64_t primary_key() const { return sender.value; }
+
+            EOSLIB_SERIALIZE(member, (sender)(agreedtermsversion)
+            )
+        };
+
+        struct [[eosio::table, eosio::contract("eosdactoken")]] termsinfo {
+            string terms;
+            string hash;
+            uint64_t version;
+
+            termsinfo()
+                    : terms(""), hash(""), version(0) {}
+
+            termsinfo(string _terms, string _hash, uint64_t _version)
+                    : terms(_terms), hash(_hash), version(_version) {}
+
+            uint64_t primary_key() const { return version; }
+            uint64_t by_latest_version() const { return UINT64_MAX - version; }
+
+          EOSLIB_SERIALIZE(termsinfo, (terms)(hash)(version))
+        };
+
+        typedef multi_index<"members"_n, member> regmembers;
+
+        typedef multi_index<"memberterms"_n, termsinfo,
+                indexed_by<"bylatestver"_n, const_mem_fun<termsinfo, uint64_t, &termsinfo::by_latest_version> >
+        > memterms;
+
         friend eosiosystem::system_contract;
 
-        inline asset get_supply(symbol_name sym) const;
+        inline asset get_supply(symbol_code sym) const;
 
-        inline asset get_balance(account_name owner, symbol_name sym) const;
+        inline asset get_balance(name owner, symbol_code sym) const;
 
         contr_config configs();
 
@@ -120,41 +128,41 @@ namespace eosdac {
 
 
     public:
+
         struct account {
             asset balance;
 
-            uint64_t primary_key() const { return balance.symbol.name(); }
+            uint64_t primary_key() const { return balance.symbol.code().raw(); }
         };
 
         struct currency_stats {
             asset supply;
             asset max_supply;
-            account_name issuer;
+            name issuer;
             bool transfer_locked = false;
 
-            uint64_t primary_key() const { return supply.symbol.name(); }
+            uint64_t primary_key() const { return supply.symbol.code().raw(); }
         };
 
-        typedef eosio::multi_index<N(accounts), account> accounts;
-        typedef eosio::multi_index<N(stat), currency_stats> stats;
+        typedef eosio::multi_index<"accounts"_n, account> accounts;
+        typedef eosio::multi_index<"stat"_n, currency_stats> stats;
 
-        void sub_balance(account_name owner, asset value, const currency_stats &st);
+        void sub_balance(name owner, asset value, const currency_stats &st);
 
-        void add_balance(account_name owner, asset value, const currency_stats &st,
-                         account_name ram_payer);
+        void add_balance(name owner, asset value, const currency_stats &st,
+                         name ram_payer);
 
     };
 
-    asset eosdactoken::get_supply(symbol_name sym) const {
-        stats statstable(_self, sym);
-        const auto &st = statstable.get(sym);
+    asset eosdactoken::get_supply(symbol_code sym) const {
+        stats statstable(_self, sym.raw());
+        const auto &st = statstable.get(sym.raw());
         return st.supply;
     }
 
-    asset eosdactoken::get_balance(account_name owner, symbol_name sym) const {
-        accounts accountstable(_self, owner);
-        const auto &ac = accountstable.get(sym);
+    asset eosdactoken::get_balance(name owner, symbol_code sym) const {
+        accounts accountstable(_self, owner.value);
+        const auto &ac = accountstable.get(sym.raw());
         return ac.balance;
     }
-
-} /// namespace eosdac
+}
