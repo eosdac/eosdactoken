@@ -29,12 +29,19 @@ ACCOUNT_NAME='eosdactoken'
 
 beforescript = <<~SHELL
   set -x
-  kill -INT `pgrep nodeos`
-  nodeos --delete-all-blocks  &>/dev/null &
+
+ kill -INT \`pgrep nodeos\`
+
+  # Launch nodeos in a new tab so the output can be observed.
+  # ttab is a nodejs module but this could be easily achieved manually without ttab.
+  ttab 'nodeos --delete-all-blocks --verbose-http-errors'
+
   sleep 2.0
   cleos wallet unlock --password `cat ~/eosio-wallet/.pass`
   cleos wallet import --private-key #{CONTRACT_ACTIVE_PRIVATE_KEY}
   cleos create account eosio #{ACCOUNT_NAME} #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
+  cleos create account eosio dacelections #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
+
 
   # create accounts for tests
   cleos create account eosio testuser1 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
@@ -427,3 +434,30 @@ describe "Read back the result for regmembers has agreed should be 0" do
   JSON
 end
 end
+
+
+describe "Adding contract to listen to transfers" do
+  # Tests before this have already tested that transfer work before the notifyctr is set
+  #
+  context "Without valid auth should fail" do
+    command %(cleos push action eosdactoken updateconfig '["eosdactoken"]' -p nontoken), allow_error: true
+    its(:stderr) {is_expected.to include('Error 3090003: Provided keys, permissions, and delays do not satisfy declared authorizations')}
+  end
+
+  context "With invalid dest account should fail" do
+    command %(cleos push action eosdactoken updateconfig '["noncontract"]' -p eosdactoken), allow_error: true
+    its(:stderr) {is_expected.to include('Invalid contract attempt to be set for notifying')}
+  end
+
+  context "With valid dest account and auth should succeed" do
+    command %(cleos push action eosdactoken updateconfig '["daccustodian"]' -p eosdactoken), allow_error: true
+    its(:stdout) {is_expected.to include('eosdactoken::updateconfig    {"notifycontr":"daccustodian"}')}
+  end
+
+  context "Transfer should still succeed" do
+    command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABY", "memo": "my first transfer"}' --permission eosdactoken@active), allow_error: true
+    its(:stdout) {is_expected.to include('500.0000 ABY')}
+  end
+end
+
+
