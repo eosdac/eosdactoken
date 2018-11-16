@@ -41,7 +41,7 @@ beforescript = <<~SHELL
   cleos wallet import --private-key #{CONTRACT_ACTIVE_PRIVATE_KEY}
   cleos create account eosio #{ACCOUNT_NAME} #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
   cleos create account eosio dacelections #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
-
+  cleos create account eosio daccustodian #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
 
   # create accounts for tests
   cleos create account eosio testuser1 #{CONTRACT_OWNER_PUBLIC_KEY} #{CONTRACT_ACTIVE_PUBLIC_KEY} -j
@@ -60,8 +60,8 @@ beforescript = <<~SHELL
     echo "failed to compile contract" 
     exit 1
   fi
-  cd ..
-  cleos set contract #{ACCOUNT_NAME} #{CONTRACT_NAME} -p #{ACCOUNT_NAME} -j
+  # cd ..
+  cleos set contract #{CONTRACT_NAME} output/unit_tests/#{ACCOUNT_NAME} -p #{ACCOUNT_NAME}
   echo `pwd`
 
 SHELL
@@ -435,7 +435,6 @@ describe "Read back the result for regmembers has agreed should be 0" do
 end
 end
 
-
 describe "Adding contract to listen to transfers" do
   # Tests before this have already tested that transfer work before the notifyctr is set
   #
@@ -455,9 +454,11 @@ describe "Adding contract to listen to transfers" do
   end
 
   context "Transfer should still succeed" do
-    command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "500.0000 ABY", "memo": "my first transfer"}' --permission eosdactoken@active), allow_error: true
-    its(:stdout) {is_expected.to include('500.0000 ABY')}
+    command %(cleos push action eosdactoken transfer '{ "from": "eosdactoken", "to": "eosio", "quantity": "498.0000 ABY", "memo": "my first transfer"}' --permission eosdactoken@active), allow_error: true
+    its(:stdout) {is_expected.to include('498.0000 ABY')}
   end
 end
+
+
 
 

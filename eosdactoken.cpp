@@ -91,7 +91,14 @@ namespace eosdac {
         if (st.transfer_locked) {
             require_auth(st.issuer);
         }
-        require_recipient(from, to, configs().notifycontr);
+
+        name notifyContract = configs().notifycontr;
+
+        if (is_account(notifyContract)) {
+            require_recipient(from, to, notifyContract);
+        } else {
+            require_recipient(from, to);
+        }
 
         eosio_assert(quantity.is_valid(), "invalid quantity");
         eosio_assert(quantity.amount > 0, "must transfer positive quantity");
@@ -204,8 +211,12 @@ namespace eosdac {
     void eosdactoken::updateconfig(name notifycontr) {
         require_auth(_self);
 
+        eosio_assert(is_account(notifycontr), "Invalid contract attempt to be set for notifying.");
+
         eosdactoken::contr_config newconfig{notifycontr};
         config_singleton.set(newconfig, _self);
+
+//        eosio::print("Updated contract config with notifycontr: ", notifycontr);
     };
 
     void eosdactoken::updateterms(uint64_t termsid, string newterms) {
