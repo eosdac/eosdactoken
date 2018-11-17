@@ -22,11 +22,11 @@ namespace eosdac {
 
     using std::string;
 
-    class [[eosio::contract("eosdactoken")]] eosdactoken : public contract {
+    class [[eosio::contract("eosdactokens")]] eosdactokens : public contract {
     public:
 
         using contract::contract;
-        eosdactoken( name s, name code, datastream<const char*> ds );
+        eosdactokens( name s, name code, datastream<const char*> ds );
 
         [[eosio::action]]
         void create(name issuer,
@@ -68,7 +68,7 @@ namespace eosdac {
         struct contr_config {
 
             //The additional account to notify of any transfers. Currently used to maintain "live" vote counts.
-            name notifycontr = "dacelections"_n;
+            name notifycontr = "daccustodian"_n;
 
             EOSLIB_SERIALIZE(contr_config,
             (notifycontr)
@@ -79,7 +79,7 @@ namespace eosdac {
         typedef singleton<"config"_n, contr_config> configscontainer;
 
 
-        struct [[eosio::table, eosio::contract("eosdactoken")]] member {
+        struct [[eosio::table, eosio::contract("eosdactokens")]] member {
             name sender;
             // agreed terms version
             uint64_t agreedtermsversion;
@@ -90,7 +90,7 @@ namespace eosdac {
             )
         };
 
-        struct [[eosio::table, eosio::contract("eosdactoken")]] termsinfo {
+        struct [[eosio::table, eosio::contract("eosdactokens")]] termsinfo {
             string terms;
             string hash;
             uint64_t version;
@@ -154,13 +154,13 @@ namespace eosdac {
 
     };
 
-    asset eosdactoken::get_supply(symbol_code sym) const {
+    asset eosdactokens::get_supply(symbol_code sym) const {
         stats statstable(_self, sym.raw());
         const auto &st = statstable.get(sym.raw());
         return st.supply;
     }
 
-    asset eosdactoken::get_balance(name owner, symbol_code sym) const {
+    asset eosdactokens::get_balance(name owner, symbol_code sym) const {
         accounts accountstable(_self, owner.value);
         const auto &ac = accountstable.get(sym.raw());
         return ac.balance;
