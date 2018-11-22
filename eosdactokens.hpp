@@ -51,9 +51,8 @@ namespace eosdac {
 
         ACTION close(name owner, const symbol& symbol);
 
-    private:
 
-        struct contr_config {
+    struct [[eosio::table("config")]] contr_config {
 
             //The additional account to notify of any transfers. Currently used to maintain "live" vote counts.
             name notifycontr = "daccustodian"_n;
@@ -67,7 +66,7 @@ namespace eosdac {
         typedef singleton<"config"_n, contr_config> configscontainer;
 
 
-        struct [[eosio::table, eosio::contract("eosdactokens")]] member {
+        TABLE member {
             name sender;
             // agreed terms version
             uint64_t agreedtermsversion;
@@ -78,7 +77,7 @@ namespace eosdac {
             )
         };
 
-        struct [[eosio::table, eosio::contract("eosdactokens")]] termsinfo {
+        TABLE termsinfo {
             string terms;
             string hash;
             uint64_t version;
@@ -114,13 +113,13 @@ namespace eosdac {
 
     public:
 
-        struct [[eosio::table, eosio::contract("eosdactokens")]] account {
+        TABLE account {
             asset balance;
 
             uint64_t primary_key() const { return balance.symbol.code().raw(); }
         };
 
-        struct [[eosio::table, eosio::contract("eosdactokens")]] currency_stats {
+        TABLE currency_stats {
             asset supply;
             asset max_supply;
             name issuer;

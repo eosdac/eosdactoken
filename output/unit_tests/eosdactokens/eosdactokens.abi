@@ -1,0 +1,349 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Thu Nov 22 20:49:23 2018",
+    "version": "eosio::abi/1.1",
+    "structs": [
+        {
+            "name": "account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "balance",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "burn",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "close",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "symbol",
+                    "type": "symbol"
+                }
+            ]
+        },
+        {
+            "name": "contr_config",
+            "base": "",
+            "fields": [
+                {
+                    "name": "notifycontr",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "create",
+            "base": "",
+            "fields": [
+                {
+                    "name": "issuer",
+                    "type": "name"
+                },
+                {
+                    "name": "maximum_supply",
+                    "type": "asset"
+                },
+                {
+                    "name": "transfer_locked",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "currency_stats",
+            "base": "",
+            "fields": [
+                {
+                    "name": "supply",
+                    "type": "asset"
+                },
+                {
+                    "name": "max_supply",
+                    "type": "asset"
+                },
+                {
+                    "name": "issuer",
+                    "type": "name"
+                },
+                {
+                    "name": "transfer_locked",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "issue",
+            "base": "",
+            "fields": [
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "member",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                },
+                {
+                    "name": "agreedtermsversion",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "memberreg",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                },
+                {
+                    "name": "agreedterms",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "memberunreg",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "newmemterms",
+            "base": "",
+            "fields": [
+                {
+                    "name": "terms",
+                    "type": "string"
+                },
+                {
+                    "name": "hash",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "termsinfo",
+            "base": "",
+            "fields": [
+                {
+                    "name": "terms",
+                    "type": "string"
+                },
+                {
+                    "name": "hash",
+                    "type": "string"
+                },
+                {
+                    "name": "version",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "transfer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "unlock",
+            "base": "",
+            "fields": [
+                {
+                    "name": "unlock",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "updateconfig",
+            "base": "",
+            "fields": [
+                {
+                    "name": "notifycontr",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "updateterms",
+            "base": "",
+            "fields": [
+                {
+                    "name": "termsid",
+                    "type": "uint64"
+                },
+                {
+                    "name": "terms",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "types": [],
+    "actions": [
+        {
+            "name": "burn",
+            "type": "burn",
+            "ricardian_contract": "## ACTION: burn\n\n**PARAMETERS:** \n* __from__ is a type of eosio account_name for the owner of the tokens to burn.\n* __quantity__ is a type of eosio asset\n\n**INTENT:** The intent of {{ burn }} is to allow a user to burn {{ quantity }} tokens that belong to them. \n\n**TERM:** The burn action lasts for the duration of the processing of the contract. The reduction in token supply persists on the deployed contract as long as it is active."
+        },
+        {
+            "name": "close",
+            "type": "close",
+            "ricardian_contract": "## ACTION: close \n\n**PARAMETERS:** \n* __notifycontr__ is a contract to also be notified of all transactions in this token contract.\n\n**INTENT:** Notify a listening contract so that it can update it's internal state based on transactions in here.\n\n**TERM:** The updateconfig action lasts for the duration of the processing of the contract."
+        },
+        {
+            "name": "create",
+            "type": "create",
+            "ricardian_contract": "## ACTION: create\n\n**PARAMETERS:** \n* __issuer__ is a type of eosio account_name\n* __maximum_supply__ is a type of asset\n* __transferred_locked__ is either 1 (true) or 0 (false)\n\n**INTENT:** The intent of {{ create }} is to create a new token with a {{ maximum supply }} as indicated. The asset is created in the format of {{ number of tokens to 4 decimal places <space>  token symbol }} for example 1000.0000 DAC will create a DAC token with a maximum number of units of 1000.0000. If {{ transfer_locked }} is set to true then only the issuer may use the transfer action. \n\n**TERM:** The act of creation of this asset will expires at the conclusion of code execution. The asset will then persist on the deployed contract as long as it is active."
+        },
+        {
+            "name": "issue",
+            "type": "issue",
+            "ricardian_contract": "## ACTION: issue\n\n**PARAMETERS:** \n* __to__ is a type of eosio accountname to issue tokens to\n* __quantity__ is a type of eosio asset\n* __memo__ is a string with a maximum of 256 charaters\n       \n**INTENT:** The intent of {{ issue }} is to issue tokens {{ quantity }} and send them to the account specified {{ to }} using the transfer action. This requires a privilaged account. A note {{ memo }} can be sent to the receiver.\n\n**TERM:** The action lasts for the duration of the processing of the contract."
+        },
+        {
+            "name": "memberreg",
+            "type": "memberreg",
+            "ricardian_contract": "## ACTION: memberreg\n\n**PARAMETERS:** \n* __sender__ is a type of eosio account_name \n* __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 charaters\n\n**INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.\n\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action."
+        },
+        {
+            "name": "memberunreg",
+            "type": "memberunreg",
+            "ricardian_contract": "## ACTION: memberunreg\n\n**PARAMETERS:** \n* __sender__ is a type of eosio account_name\n\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister it's membership. \n\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action."
+        },
+        {
+            "name": "newmemterms",
+            "type": "newmemterms",
+            "ricardian_contract": "## ACTION: newmemterms \n\n**PARAMETERS:** \n* __terms__ content for new member terms so that they can accessed on the front end clients.\n* __hash__ a checksum hash to verify the contents that would be be agreed to on the client has not been changed. \n\n**INTENT:** Add an updated member terms entry after content has been changed in the member agreement.\n\n**TERM:** The newmemterms action lasts for the duration of the processing of the contract."
+        },
+        {
+            "name": "transfer",
+            "type": "transfer",
+            "ricardian_contract": "## ACTION: transfer\n\n**PARAMETERS:** \n* __from__ is a type of eosio account_name, \n* __to__ is a type of eosio account_name, \n* __quantity__ is a type of eosio asset, \n* __memo__ is a string with a maximum of 256 characters\n\n**INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.\n\n**TERM:** The transfer action lasts for the duration of the processing of the contract."
+        },
+        {
+            "name": "unlock",
+            "type": "unlock",
+            "ricardian_contract": "## ACTION: unlock\n\n**PARAMETERS:** \n* __unlock__ is a type of asset\n\n**INTENT:** The intent of {{ unlock }} is to unlock a token to allow transfers from accounts other than the token creator. The parameter passed in must be a standard asset in the form of \"1000.0000 ABC\". Although the amount component eg. 1000.000 is ignored for the logic it is required for the format of an asset parameter. This can only be done once to unlock a token and cannot be reversed to lock a token again.\n\n**TERM:** The act of unlocking transfer on this asset will expires at the conclusion of code execution. Transfer functionality for the asset will then persist on the deployed contract as long as it is active."
+        },
+        {
+            "name": "updateconfig",
+            "type": "updateconfig",
+            "ricardian_contract": "## ACTION: updateconfig \n\n**PARAMETERS:** \n* __notifycontr__ is a contract to also be notified of all transactions in this token contract.\n\n**INTENT:** Notify a listening contract so that it can update it's internal state based on transactions in here.\n\n**TERM:** The updateconfig action lasts for the duration of the processing of the contract."
+        },
+        {
+            "name": "updateterms",
+            "type": "updateterms",
+            "ricardian_contract": "## ACTION: updateterms \n\n**PARAMETERS:** \n* __termsid__ is a number id of the terms reference stored in the contract.\n* __terms__ is checksum hash of the updated terms.\n\n**INTENT:** Update the link for the terms for a pre-existing record of member terms based on a given version id.\n\n**TERM:** The updateterms action lasts for the duration of the processing of the contract."
+        }
+    ],
+    "tables": [
+        {
+            "name": "accounts",
+            "type": "account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "config",
+            "type": "contr_config",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "members",
+            "type": "member",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "memberterms",
+            "type": "termsinfo",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "stat",
+            "type": "currency_stats",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [
+        {
+            "id": "ENTIRE AGREEMENT",
+            "body": "This contract contains the entire agreement of the parties, for all described actions, and there are no other promises or conditions in any other agreement whether oral or written concerning the subject matter of this Contract. This contract supersedes any prior written or oral agreements between the parties."
+        },
+        {
+            "id": "BINDING CONSTITUTION",
+            "body": "All the the action descibed in this contract are subject to the EOSDAC consitution as held at http://eosdac.io . This includes, but is not limited to membership terms and condiutions, dispute resolution and severability."
+        },
+        {
+            "id": "OVERALL FUNCTION",
+            "body": "This contract creates the currency and also give a means to say whether an eosDAC account holder is a member. A member is classified as a token holder who has registered and agreed to the membership agreement. This contract also covers the standard token transfer and account balance functions"
+        }
+    ],
+    "variants": [],
+    "abi_extensions": []
+}
