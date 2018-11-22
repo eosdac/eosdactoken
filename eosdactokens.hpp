@@ -18,49 +18,38 @@ namespace eosdac {
 
     using std::string;
 
-    class [[eosio::contract("eosdactokens")]] eosdactokens : public contract {
+    CONTRACT eosdactokens : public contract {
     public:
 
         using contract::contract;
         eosdactokens( name s, name code, datastream<const char*> ds );
 
-        [[eosio::action]]
-        void create(name issuer,
+        ACTION create(name issuer,
                     asset maximum_supply,
                     bool transfer_locked);
 
-        [[eosio::action]]
-        void issue(name to, asset quantity, string memo);
+        ACTION issue(name to, asset quantity, string memo);
 
-        [[eosio::action]]
-        void unlock(asset unlock);
+        ACTION unlock(asset unlock);
 
-        [[eosio::action]]
-        void burn(name from, asset quantity);
+        ACTION burn(name from, asset quantity);
 
-        [[eosio::action]]
-        void transfer(name from,
+        ACTION transfer(name from,
                       name to,
                       asset quantity,
                       string memo);
 
-        [[eosio::action]]
-        void newmemterms(string terms, string hash);
+        ACTION newmemterms(string terms, string hash);
 
-        [[eosio::action]]
-        void memberreg(name sender, string agreedterms);
+        ACTION memberreg(name sender, string agreedterms);
 
-        [[eosio::action]]
-        void memberunreg(name sender);
+        ACTION memberunreg(name sender);
 
-        [[eosio::action]]
-        void updateconfig(name notifycontr);
+        ACTION updateconfig(name notifycontr);
 
-        [[eosio::action]]
-        void updateterms(uint64_t termsid, string terms);
+        ACTION updateterms(uint64_t termsid, string terms);
 
-        [[eosio::action]]
-        void close(name owner, const symbol& symbol);
+        ACTION close(name owner, const symbol& symbol);
 
     private:
 
