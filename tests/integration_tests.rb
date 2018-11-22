@@ -60,6 +60,7 @@ describe "eosdactokens" do
       end
 
       context "inactive and unregistered candidate" do
+        before(:all) { sleep 2.0 }
         command %(cleos push action eosdactokens memberunreg '{ "sender": "unreguser2"}' -p unreguser2), allow_error: true
         its(:stderr) {is_expected.to include('ERR::MEMBERUNREG_MEMBER_NOT_REGISTERED::')}
       end

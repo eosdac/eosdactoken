@@ -334,7 +334,7 @@ end
 
 describe "Member reg" do
   before(:all) do
-  puts "before stufff"
+  puts "before stuff"
   end
 
   context "without auth should fail" do
@@ -358,7 +358,7 @@ describe "Member reg" do
       expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
       {
         "rows": [
-          {"sender":"testuser2", "agreedterms":1}
+          {"sender":"testuser2", "agreedtermsversion":1}
         ],
         "more": false
       }
@@ -394,8 +394,8 @@ describe "Read back the result for regmembers hasagreed should have entry" do
     expect(JSON.parse(subject.stdout)).to eq JSON.parse <<~JSON
     {
       "rows": [
-        {"sender":"testuser2", "agreedterms":1},
-        {"sender":"testuser3", "agreedterms":2}
+        {"sender":"testuser2", "agreedtermsversion":1},
+        {"sender":"testuser3", "agreedtermsversion":2}
       ],
       "more": false
     }
@@ -426,7 +426,7 @@ describe "Read back the result for regmembers has agreed should be 0" do
     expect(JSON.parse(subject.stdout)).to eq JSON.parse <<-JSON
     {
       "rows": [
-        {"sender":"testuser2", "agreedterms":1}
+        {"sender":"testuser2", "agreedtermsversion":1}
     ],
     "more": false
   }

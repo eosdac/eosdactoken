@@ -1,17 +1,10 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE.txt
- */
-
 #include "eosdactokens.hpp"
 #include "externalheader.hpp"
-
 #include <algorithm>
+
 namespace eosdac {
     eosdactokens::eosdactokens( name s, name code, datastream<const char*> ds )
     :contract(s,code,ds),
-        registeredgmembers(_self, _self.value),
-        memberterms(_self, _self.value),
         config_singleton(_self, _self.value) {}
 
     void eosdactokens::create(name issuer,
@@ -39,29 +32,50 @@ namespace eosdac {
     void eosdactokens::issue(name to, asset quantity, string memo) {
         auto sym = quantity.symbol;
         eosio_assert(sym.is_valid(), "ERR::ISSUE_INVALID_SYMBOL::invalid symbol name");
-
         auto sym_name = sym.code().raw();
         stats statstable(_self, sym_name);
         auto existing = statstable.find(sym_name);
         eosio_assert(existing != statstable.end(), "ERR::ISSUE_NON_EXISTING_SYMBOL::token with symbol does not exist, create token before issue");
         const auto &st = *existing;
+        print("issue up to here");
 
         require_auth(st.issuer);
-        eosio_assert(quantity.is_valid(), "ERR::ISSUE_INVALID_QUANTITY::invalid quantity.");
-        eosio_assert(quantity.amount > 0, "ERR::ISSUE_NON_POSITIVE_must issue positive quantity");
+        eosio_assert(quantity.is_valid(), "ERR::ISSUE_INVALID_QUANTITY::invalid quantity");
+        eosio_assert(quantity.amount > 0, "ERR::ISSUE_NON_POSITIVE::must issue positive quantity");
 
         eosio_assert(quantity.symbol == st.supply.symbol, "ERR::ISSUE_INVALID_PRECISION::symbol precision mismatch");
         eosio_assert(quantity.amount <= st.max_supply.amount - st.supply.amount, "ERR::ISSUE_QTY_EXCEED_SUPPLY::quantity exceeds available supply");
 
-        statstable.modify(st, name{}, [&](auto &s) {
+        statstable.modify(st, same_payer, [&](auto &s) {
             s.supply += quantity;
         });
 
-        add_balance(st.issuer, quantity, st, st.issuer);
+        add_balance(st.issuer, quantity, st.issuer);
 
         if (to != st.issuer) {
             SEND_INLINE_ACTION(*this, transfer, {st.issuer, "active"_n}, {st.issuer, to, quantity, memo});
         }
+    }
+
+    void eosdactokens::burn(name from, asset quantity) {
+        print("burn");
+        require_auth(from);
+
+        auto sym = quantity.symbol.code();
+        stats statstable(_self, sym.raw());
+        const auto &st = statstable.get(sym.raw(), "ERR::BURN_UNKNOWN_SYMBOL::Attempting to burn a token unknown to this contract");
+        eosio_assert(!st.transfer_locked, "ERR::BURN_LOCKED_TOKEN::Burn tokens on transferLocked token. The issuer must `unlock` first.");
+        require_recipient(from);
+
+        eosio_assert(quantity.is_valid(), "ERR::BURN_INVALID_QTY_::invalid quantity");
+        eosio_assert(quantity.amount > 0, "ERR::BURN_NON_POSITIVE_QTY_::must burn positive quantity");
+        eosio_assert(quantity.symbol == st.supply.symbol, "ERR::BURN_SYMBOL_MISMATCH::symbol precision mismatch");
+
+        sub_balance(from, quantity);
+
+        statstable.modify(st, name{}, [&](currency_stats &s) {
+            s.supply -= quantity;
+        });
     }
 
     void eosdactokens::unlock(asset unlock) {
@@ -81,10 +95,11 @@ namespace eosdac {
     void eosdactokens::transfer(name from,
                                name to,
                                asset quantity,
-                               string       /*memo*/) {
+                               string memo) {
         eosio_assert(from != to, "ERR::TRANSFER_TO_SELF::cannot transfer to self");
         require_auth(from);
         eosio_assert(is_account(to), "ERR::TRANSFER_NONEXISTING_DESTN::to account does not exist");
+
         auto sym = quantity.symbol.code();
         stats statstable(_self, sym.raw());
         const auto &st = statstable.get(sym.raw());
@@ -104,28 +119,26 @@ namespace eosdac {
         eosio_assert(quantity.is_valid(), "ERR::TRANSFER_INVALID_QTY::invalid quantity");
         eosio_assert(quantity.amount > 0, "ERR::TRANSFER_NON_POSITIVE_QTY::must transfer positive quantity");
         eosio_assert(quantity.symbol == st.supply.symbol, "ERR::TRANSFER_SYMBOL_MISMATCH::symbol precision mismatch");
+        eosio_assert(memo.size() <= 256, "ERR::TRANSFER_MEMO_TOO_LONG::memo has more than 256 bytes");
 
-        sub_balance(from, quantity, st);
-        add_balance(to, quantity, st, from);
+        auto payer = has_auth( to ) ? to : from;
+
+        sub_balance(from, quantity);
+        add_balance(to, quantity, payer);
     }
 
-    void eosdactokens::sub_balance(name owner, asset value, const currency_stats &st) {
+    void eosdactokens::sub_balance(name owner, asset value) {
         accounts from_acnts(_self, owner.value);
 
         const auto &from = from_acnts.get(value.symbol.code().raw());
         eosio_assert(from.balance.amount >= value.amount, "ERR::TRANSFER_OVERDRAWN::overdrawn balance");
 
-
-        if (from.balance.amount == value.amount) {
-            from_acnts.erase(from);
-        } else {
-            from_acnts.modify(from, owner, [&](auto &a) {
-                a.balance -= value;
-            });
-        }
+        from_acnts.modify(from, owner, [&](auto &a) {
+            a.balance -= value;
+        });
     }
 
-    void eosdactokens::add_balance(name owner, asset value, const currency_stats &st, name ram_payer) {
+    void eosdactokens::add_balance(name owner, asset value, name ram_payer) {
         accounts to_acnts(_self, owner.value);
         auto to = to_acnts.find(value.symbol.code().raw());
         if (to == to_acnts.end()) {
@@ -133,31 +146,10 @@ namespace eosdac {
                 a.balance = value;
             });
         } else {
-            to_acnts.modify(to, name{}, [&](auto &a) {
+            to_acnts.modify(to, same_payer, [&](auto &a) {
                 a.balance += value;
             });
         }
-    }
-
-    void eosdactokens::burn(name from, asset quantity) {
-        print("burn");
-        require_auth(from);
-
-        auto sym = quantity.symbol.code();
-        stats statstable(_self, sym.raw());
-        const auto &st = statstable.get(sym.raw(), "ERR::BURN_UNKNOWN_SYMBOL::Attempting to burn a token unknown to this contract");
-        eosio_assert(!st.transfer_locked, "ERR::BURN_LOCKED_TOKEN::Burn tokens on transferLocked token. The issuer must `unlock` first.");
-        require_recipient(from);
-
-        eosio_assert(quantity.is_valid(), "ERR::BURN_INVALID_QTY_::invalid quantity");
-        eosio_assert(quantity.amount > 0, "ERR::BURN_NON_POSITIVE_QTY_::must burn positive quantity");
-        eosio_assert(quantity.symbol == st.supply.symbol, "ERR::BURN_SYMBOL_MISMATCH::symbol precision mismatch");
-
-        sub_balance(from, quantity, st);
-
-        statstable.modify(st, name{}, [&](currency_stats &s) {
-            s.supply -= quantity;
-        });
     }
 
     void eosdactokens::newmemterms(string terms, string hash) {
@@ -171,6 +163,8 @@ namespace eosdac {
 
         eosio_assert(!hash.empty(), "ERR::NEWMEMTERMS_EMPTY_HASH::Member terms document hash cannot be empty.");
         eosio_assert(hash.length() <= 32, "ERR::NEWMEMTERMS_HASH_TOO_LONG::Member terms document hash should be less than 32 characters long.");
+
+        memterms memberterms(_self, _self.value);
 
         // guard against duplicate of latest
         if (memberterms.begin() != memberterms.end()) {
@@ -191,10 +185,14 @@ namespace eosdac {
     void eosdactokens::memberreg(name sender, string agreedterms) {
         // agreedterms is expected to be the member terms document hash
         require_auth(sender);
+
+        memterms memberterms(_self, _self.value);
+
         eosio_assert(memberterms.begin() != memberterms.end(), "ERR::MEMBERREG_NO_VALID_TERMS::No valid member terms found.");
 
         auto latest_member_terms = (--memberterms.end());
         eosio_assert(latest_member_terms->hash == agreedterms, "ERR::MEMBERREG_NOT_LATEST_TERMS::Agreed terms isn't the latest.");
+        regmembers registeredgmembers = regmembers(_self, _self.value);
 
         auto existingMember = registeredgmembers.find(sender.value);
         if (existingMember != registeredgmembers.end()) {
@@ -222,7 +220,9 @@ namespace eosdac {
 
         require_auth(_self);
 
-       auto existingterms = memberterms.find(termsid);
+        memterms memberterms(_self, _self.value);
+
+        auto existingterms = memberterms.find(termsid);
        eosio_assert(existingterms != memberterms.end(), "ERR::UPDATETERMS_NO_EXISTING_TERMS::Existing terms not found for the given ID");
 
         memberterms.modify(existingterms, name{}, [&](termsinfo &t) {
@@ -246,6 +246,8 @@ namespace eosdac {
             }
         }
 
+        regmembers registeredgmembers = regmembers(_self, _self.value);
+
         auto regMember = registeredgmembers.find(sender.value);
         eosio_assert(regMember != registeredgmembers.end(), "ERR::MEMBERUNREG_MEMBER_NOT_REGISTERED::Member is not registered.");
         registeredgmembers.erase(regMember);
@@ -256,11 +258,21 @@ namespace eosdac {
         config_singleton.set(conf, _self);
         return conf;
     }
+
+    void eosdactokens::close(name owner, const symbol& symbol) {
+        require_auth( owner );
+        accounts acnts( _self, owner.value );
+        auto it = acnts.find( symbol.code().raw() );
+        eosio_assert( it != acnts.end(), "ERR::CLOSE_NON_EXISTING_BALANCE::Balance row already deleted or never existed. Action won't have any effect." );
+        eosio_assert( it->balance.amount == 0, "ERR::CLOSE_NON_ZERO_BALANCE::Cannot close because the balance is not zero." );
+        acnts.erase( it );
+    }
 }
 
 EOSIO_DISPATCH(eosdac::eosdactokens,
                 (memberreg)
                 (memberunreg)
+                (close)
                 (create)
                 (issue)
                 (transfer)

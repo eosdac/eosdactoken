@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-~/Documents/code/EOSIO/eosio.cdt/build/bin/eosio-cpp -o output/unit_tests/eosdactokens/eosdactokens.wast eosdactokens.cpp
+eosio-cpp -o output/unit_tests/eosdactokens/eosdactokens.wasm eosdactokens.cpp
+eosio-abigen eosdactokens.hpp -contract eosdactokens -output output/unit_tests/eosdactokens/eosdactokens.abi

@@ -1,7 +1,3 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE.txt
- */
 #pragma once
 
 #include <eosiolib/asset.hpp>
@@ -63,6 +59,9 @@ namespace eosdac {
         [[eosio::action]]
         void updateterms(uint64_t termsid, string terms);
 
+        [[eosio::action]]
+        void close(name owner, const symbol& symbol);
+
     private:
 
         struct contr_config {
@@ -121,21 +120,18 @@ namespace eosdac {
 
         contr_config configs();
 
-        regmembers registeredgmembers;
-        memterms memberterms;
-
         configscontainer config_singleton;
 
 
     public:
 
-        struct account {
+        struct [[eosio::table, eosio::contract("eosdactokens")]] account {
             asset balance;
 
             uint64_t primary_key() const { return balance.symbol.code().raw(); }
         };
 
-        struct currency_stats {
+        struct [[eosio::table, eosio::contract("eosdactokens")]] currency_stats {
             asset supply;
             asset max_supply;
             name issuer;
@@ -147,10 +143,9 @@ namespace eosdac {
         typedef eosio::multi_index<"accounts"_n, account> accounts;
         typedef eosio::multi_index<"stat"_n, currency_stats> stats;
 
-        void sub_balance(name owner, asset value, const currency_stats &st);
+        void sub_balance(name owner, asset value);
 
-        void add_balance(name owner, asset value, const currency_stats &st,
-                         name ram_payer);
+        void add_balance(name owner, asset value, name payer);
 
     };
 
