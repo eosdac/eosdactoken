@@ -1,7 +1,6 @@
 <h1 class="contract">
    create
 </h1>
-## ACTION: create
 
 **PARAMETERS:** 
 * __issuer__ is a type of eosio account_name
@@ -15,7 +14,6 @@
 <h1 class="contract">
    issue
 </h1>
-## ACTION: issue
 
 **PARAMETERS:** 
 * __to__ is a type of eosio accountname to issue tokens to
@@ -29,7 +27,7 @@
 <h1 class="contract">
    unlock
 </h1>
-## ACTION: unlock
+
 
 **PARAMETERS:** 
 * __unlock__ is a type of asset
@@ -41,7 +39,6 @@
 <h1 class="contract">
    burn
 </h1>
-## ACTION: burn
 
 **PARAMETERS:** 
 * __from__ is a type of eosio account_name for the owner of the tokens to burn.
@@ -54,22 +51,20 @@
 <h1 class="contract">
    transfer
 </h1>
-## ACTION: transfer
 
 **PARAMETERS:** 
-* __from__ is a type of eosio account_name, 
-* __to__ is a type of eosio account_name, 
-* __quantity__ is a type of eosio asset, 
+* __from__ is a type of eosio account_name
+* __to__ is a type of eosio account_name
+* __quantity__ is a type of eosio asset
 * __memo__ is a string with a maximum of 256 characters
 
 **INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.
 
-**TERM:** The transfer action lasts for the duration of the processing of the contract.
-
+**TERM:** The transfer action represents a change in the asset balances of the accounts involved in the transaction."
+s
 <h1 class="contract">
    memberreg
 </h1>
-## ACTION: memberreg
 
 **PARAMETERS:** 
 * __sender__ is a type of eosio account_name 
@@ -82,32 +77,29 @@
 <h1 class="contract">
    memberunreg
 </h1>
-## ACTION: memberunreg
 
 **PARAMETERS:** 
 * __sender__ is a type of eosio account_name
 
-**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister it's membership. 
+**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.
 
 **TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action.
 
 <h1 class="contract">
    updateterms
 </h1>
-## ACTION: updateterms 
 
 **PARAMETERS:** 
 * __termsid__ is a number id of the terms reference stored in the contract.
 * __terms__ is checksum hash of the updated terms.
 
-**INTENT:** Update the link for the terms for a pre-existing record of member terms based on a given version id.
+**INTENT:** The intent of {{ updateterms }} is to change the URL link specifying where the terms of a pre-existing record of member terms are located, associated with the given version {{ termsid }}.
 
-**TERM:** The updateterms action lasts for the duration of the processing of the contract.
+**TERM:** The update terms action lasts until it is superceded by a subsequent action.
 
 <h1 class="contract">
    updateconfig
 </h1>
-## ACTION: updateconfig 
 
 **PARAMETERS:** 
 * __notifycontr__ is a contract to also be notified of all transactions in this token contract.
@@ -119,7 +111,6 @@
 <h1 class="contract">
    close
 </h1>
-## ACTION: close 
 
 **PARAMETERS:** 
 * __notifycontr__ is a contract to also be notified of all transactions in this token contract.
@@ -131,7 +122,6 @@
 <h1 class="contract">
    newmemterms
 </h1>
-## ACTION: newmemterms 
 
 **PARAMETERS:** 
 * __terms__ content for new member terms so that they can accessed on the front end clients.
