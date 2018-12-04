@@ -18,9 +18,9 @@
 **PARAMETERS:** 
 * __to__ is a type of eosio accountname to issue tokens to
 * __quantity__ is a type of eosio asset
-* __memo__ is a string with a maximum of 256 charaters
+* __memo__ is a string with a maximum of 256 characters
        
-**INTENT:** The intent of {{ issue }} is to issue tokens {{ quantity }} and send them to the account specified {{ to }} using the transfer action. This requires a privilaged account. A note {{ memo }} can be sent to the receiver.
+**INTENT:** The intent of {{ issue }} is to issue tokens {{ quantity }} and send them to the account specified {{ to }} using the transfer action. This requires a privileged account. A note {{ memo }} can be sent to the receiver.
 
 **TERM:** The action lasts for the duration of the processing of the contract.
 
@@ -68,11 +68,11 @@ s
 
 **PARAMETERS:** 
 * __sender__ is a type of eosio account_name 
-* __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 charaters
+* __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 characters
 
 **INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.
 
-**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superceeded by an updated memberreg or memberunreg action.
+**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superseded by an updated memberreg or memberunreg action.
 
 <h1 class="contract">
    memberunreg
@@ -83,7 +83,7 @@ s
 
 **INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.
 
-**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superceeded by an updated memberreg action.
+**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superseded by an updated memberreg action.
 
 <h1 class="contract">
    updateterms
@@ -95,7 +95,7 @@ s
 
 **INTENT:** The intent of {{ updateterms }} is to change the URL link specifying where the terms of a pre-existing record of member terms are located, associated with the given version {{ termsid }}.
 
-**TERM:** The update terms action lasts until it is superceded by a subsequent action.
+**TERM:** The update terms action lasts until it is superseded by a subsequent action.
 
 <h1 class="contract">
    updateconfig
@@ -113,11 +113,12 @@ s
 </h1>
 
 **PARAMETERS:** 
-* __notifycontr__ is a contract to also be notified of all transactions in this token contract.
+* __owner__ is the owner of a balance entry for the token.
+* __symbol__ is the symbol for the currency entry to close
 
-**INTENT:** Notify a listening contract so that it can update it's internal state based on transactions in here.
+**INTENT:** Close a balance entry for a token. This allows for a 0 balance to be kept open while still holding a valid entry in the token table.
+Term: The updateconfig action lasts for the duration of the processing of the contract.
 
-**TERM:** The updateconfig action lasts for the duration of the processing of the contract.
 
 <h1 class="contract">
    newmemterms
