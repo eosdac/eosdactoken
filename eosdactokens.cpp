@@ -219,11 +219,13 @@ namespace eosdac {
     void eosdactokens::updateterms(uint64_t termsid, string newterms) {
 
         require_auth(_self);
+        eosio_assert(newterms.length() <= 256, "ERR::UPDATEMEMTERMS_TERMS_TOO_LONG::Member terms document url should be less than 256 characters long.");
 
         memterms memberterms(_self, _self.value);
 
         auto existingterms = memberterms.find(termsid);
        eosio_assert(existingterms != memberterms.end(), "ERR::UPDATETERMS_NO_EXISTING_TERMS::Existing terms not found for the given ID");
+
 
         memberterms.modify(existingterms, name{}, [&](termsinfo &t) {
             t.terms = newterms;
