@@ -153,9 +153,12 @@ namespace eosdac {
     }
 
     void eosdactokens::newmemterms(string terms, string hash) {
-        // print("In newmemterms(). ");
+        newmemtermse(terms, hash, _self);
+    }
 
-        require_auth(_self);
+    void eosdactokens::newmemtermse(string terms, string hash, name managing_account) {
+
+        require_auth(managing_account);
 
         // sample IPFS: QmXjkFQjnD8i8ntmwehoAHBfJEApETx8ebScyVzAHqgjpD
         eosio_assert(!terms.empty(), "ERR::NEWMEMTERMS_EMPTY_TERMS::Member terms cannot be empty.");
@@ -164,7 +167,7 @@ namespace eosdac {
         eosio_assert(!hash.empty(), "ERR::NEWMEMTERMS_EMPTY_HASH::Member terms document hash cannot be empty.");
         eosio_assert(hash.length() <= 32, "ERR::NEWMEMTERMS_HASH_TOO_LONG::Member terms document hash should be less than 32 characters long.");
 
-        memterms memberterms(_self, _self.value);
+        memterms memberterms(_self, managing_account.value);
 
         // guard against duplicate of latest
         if (memberterms.begin() != memberterms.end()) {
@@ -175,7 +178,7 @@ namespace eosdac {
 
         uint64_t next_version = (memberterms.begin() == memberterms.end() ? 0 : (--memberterms.end())->version) + 1;
 
-        memberterms.emplace(_self, [&](termsinfo &termsinfo) {
+        memberterms.emplace(managing_account, [&](termsinfo &termsinfo) {
             termsinfo.terms = terms;
             termsinfo.hash = hash;
             termsinfo.version = next_version;
@@ -183,16 +186,21 @@ namespace eosdac {
     }
 
     void eosdactokens::memberreg(name sender, string agreedterms) {
+        memberrege(sender, agreedterms, _self);
+    }
+
+    void eosdactokens::memberrege(name sender, string agreedterms, name managing_account) {
         // agreedterms is expected to be the member terms document hash
         require_auth(sender);
+        eosio_assert(is_account(managing_account),"managing_account is not valid");
 
-        memterms memberterms(_self, _self.value);
+        memterms memberterms(_self, managing_account.value);
 
         eosio_assert(memberterms.begin() != memberterms.end(), "ERR::MEMBERREG_NO_VALID_TERMS::No valid member terms found.");
 
         auto latest_member_terms = (--memberterms.end());
         eosio_assert(latest_member_terms->hash == agreedterms, "ERR::MEMBERREG_NOT_LATEST_TERMS::Agreed terms isn't the latest.");
-        regmembers registeredgmembers = regmembers(_self, _self.value);
+        regmembers registeredgmembers = regmembers(_self, managing_account.value);
 
         auto existingMember = registeredgmembers.find(sender.value);
         if (existingMember != registeredgmembers.end()) {
@@ -216,24 +224,33 @@ namespace eosdac {
         config_singleton.set(newconfig, _self);
     };
 
-    void eosdactokens::updateterms(uint64_t termsid, string newterms) {
+    void eosdactokens::updateterms(uint64_t termsid, string terms) {
+        updatetermse(termsid, terms, _self);
+    }
 
-        require_auth(_self);
-        eosio_assert(newterms.length() <= 256, "ERR::UPDATEMEMTERMS_TERMS_TOO_LONG::Member terms document url should be less than 256 characters long.");
+    void eosdactokens::updatetermse(uint64_t termsid, string terms, name managing_account) {
 
-        memterms memberterms(_self, _self.value);
+        require_auth(managing_account);
+        eosio_assert(terms.length() <= 256, "ERR::UPDATEMEMTERMS_TERMS_TOO_LONG::Member terms document url should be less than 256 characters long.");
+
+        memterms memberterms(_self, managing_account.value);
 
         auto existingterms = memberterms.find(termsid);
        eosio_assert(existingterms != memberterms.end(), "ERR::UPDATETERMS_NO_EXISTING_TERMS::Existing terms not found for the given ID");
 
 
         memberterms.modify(existingterms, name{}, [&](termsinfo &t) {
-            t.terms = newterms;
+            t.terms = terms;
         });
     }
 
     void eosdactokens::memberunreg(name sender) {
+        memberunrege(sender, _self);
+    }
+
+    void eosdactokens::memberunrege(name sender, name managing_account) {
         require_auth(sender);
+        eosio_assert(is_account(managing_account),"managing_account is not valid");
 
         if (is_account(configs().notifycontr.value)) {
             name notifyContract = configs().notifycontr;
@@ -248,7 +265,7 @@ namespace eosdac {
             }
         }
 
-        regmembers registeredgmembers = regmembers(_self, _self.value);
+        regmembers registeredgmembers = regmembers(_self, managing_account.value);
 
         auto regMember = registeredgmembers.find(sender.value);
         eosio_assert(regMember != registeredgmembers.end(), "ERR::MEMBERUNREG_MEMBER_NOT_REGISTERED::Member is not registered.");
@@ -272,14 +289,14 @@ namespace eosdac {
 }
 
 EOSIO_DISPATCH(eosdac::eosdactokens,
-                (memberreg)
-                (memberunreg)
+                (memberreg)(memberrege)
+                (memberunreg)(memberunrege)
                 (close)
                 (create)
                 (issue)
                 (transfer)
                 (burn)
-                (newmemterms)
+                (newmemterms)(newmemtermse)
                 (unlock)
                 (updateconfig)
-                (updateterms))
+                (updateterms)(updatetermse))

@@ -40,14 +40,18 @@ namespace eosdac {
                       string memo);
 
         ACTION newmemterms(string terms, string hash);
+        ACTION newmemtermse(string terms, string hash, name managing_account);
 
         ACTION memberreg(name sender, string agreedterms);
+        ACTION memberrege(name sender, string agreedterms, name managing_account);
 
         ACTION memberunreg(name sender);
+        ACTION memberunrege(name sender, name managing_account);
 
         ACTION updateconfig(name notifycontr);
 
         ACTION updateterms(uint64_t termsid, string terms);
+        ACTION updatetermse(uint64_t termsid, string terms, name managing_account);
 
         ACTION close(name owner, const symbol& symbol);
 

@@ -1,5 +1,5 @@
 {
-    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Tue Dec  4 19:50:18 2018",
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Sat Mar 16 08:58:46 2019",
     "version": "eosio::abi/1.1",
     "structs": [
         {
@@ -137,11 +137,43 @@
             ]
         },
         {
+            "name": "memberrege",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                },
+                {
+                    "name": "agreedterms",
+                    "type": "string"
+                },
+                {
+                    "name": "managing_account",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "memberunreg",
             "base": "",
             "fields": [
                 {
                     "name": "sender",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "memberunrege",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                },
+                {
+                    "name": "managing_account",
                     "type": "name"
                 }
             ]
@@ -157,6 +189,24 @@
                 {
                     "name": "hash",
                     "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "newmemtermse",
+            "base": "",
+            "fields": [
+                {
+                    "name": "terms",
+                    "type": "string"
+                },
+                {
+                    "name": "hash",
+                    "type": "string"
+                },
+                {
+                    "name": "managing_account",
+                    "type": "name"
                 }
             ]
         },
@@ -233,6 +283,24 @@
                     "type": "string"
                 }
             ]
+        },
+        {
+            "name": "updatetermse",
+            "base": "",
+            "fields": [
+                {
+                    "name": "termsid",
+                    "type": "uint64"
+                },
+                {
+                    "name": "terms",
+                    "type": "string"
+                },
+                {
+                    "name": "managing_account",
+                    "type": "name"
+                }
+            ]
         }
     ],
     "types": [],
@@ -260,12 +328,22 @@
         {
             "name": "memberreg",
             "type": "memberreg",
-            "ricardian_contract": "**PARAMETERS:** \n* __sender__ is a type of eosio account_name \n* __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 characters\n\n**INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.\n\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superseded by an updated memberreg or memberunreg action."
+            "ricardian_contract": "**PARAMETERS:** \n* __sender__ eos account name for a registering member\n* __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 characters\n\n**INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.\n\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superseded by an updated memberreg or memberunreg action."
+        },
+        {
+            "name": "memberrege",
+            "type": "memberrege",
+            "ricardian_contract": "**PARAMETERS:** \n* __sender__ eos account name for a registering member\n* __agreedterms__ hash reference to a document contained in a string with a maximum of 256 characters\n* __managing_account__ eos account name to scope this action to a specific dac.\n\n**INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.\n\n**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superseded by an updated memberreg or memberunreg action."
         },
         {
             "name": "memberunreg",
             "type": "memberunreg",
-            "ricardian_contract": "**PARAMETERS:** \n* __sender__ is a type of eosio account_name\n\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.\n\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superseded by an updated memberreg action."
+            "ricardian_contract": "**PARAMETERS:** \n* __sender__ eos account name for a unregistering member\n\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.\n\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superseded by an updated memberreg action."
+        },
+        {
+            "name": "memberunrege",
+            "type": "memberunrege",
+            "ricardian_contract": "**PARAMETERS:** \n* __sender__ eos account name for a unregistering member\n* __managing_account__ eos account name to scope this action to a specific dac.\n\n**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.\n\n**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superseded by an updated memberreg action."
         },
         {
             "name": "newmemterms",
@@ -273,9 +351,14 @@
             "ricardian_contract": "**PARAMETERS:** \n* __terms__ content for new member terms so that they can accessed on the front end clients.\n* __hash__ a checksum hash to verify the contents that would be be agreed to on the client has not been changed. \n\n**INTENT:** Add an updated member terms entry after content has been changed in the member agreement.\n\n**TERM:** The newmemterms action lasts for the duration of the processing of the contract."
         },
         {
+            "name": "newmemtermse",
+            "type": "newmemtermse",
+            "ricardian_contract": "**PARAMETERS:** \n* __terms__ content for new member terms so that they can accessed on the front end clients.\n* __hash__ a checksum hash to verify the contents that would be be agreed to on the client has not been changed. \n* __managing_account__ eos account name to scope this action to a specific dac.\n\n**INTENT:** Add an updated member terms entry after content has been changed in the member agreement.\n\n**TERM:** The newmemterms action lasts for the duration of the processing of the contract."
+        },
+        {
             "name": "transfer",
             "type": "transfer",
-            "ricardian_contract": "**PARAMETERS:** \n* __from__ is a type of eosio account_name\n* __to__ is a type of eosio account_name\n* __quantity__ is a type of eosio asset\n* __memo__ is a string with a maximum of 256 characters\n\n**INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.\n\n**TERM:** The transfer action represents a change in the asset balances of the accounts involved in the transaction.\"\ns"
+            "ricardian_contract": "**PARAMETERS:** \n* __from__ is a type of eosio account_name\n* __to__ is a type of eosio account_name\n* __quantity__ is a type of eosio asset\n* __memo__ is a string with a maximum of 256 characters\n\n**INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.\n\n**TERM:** The transfer action represents a change in the asset balances of the accounts involved in the transaction.\""
         },
         {
             "name": "unlock",
@@ -291,6 +374,11 @@
             "name": "updateterms",
             "type": "updateterms",
             "ricardian_contract": "**PARAMETERS:** \n* __termsid__ is a number id of the terms reference stored in the contract.\n* __terms__ is checksum hash of the updated terms.\n\n**INTENT:** The intent of {{ updateterms }} is to change the URL link specifying where the terms of a pre-existing record of member terms are located, associated with the given version {{ termsid }}.\n\n**TERM:** The update terms action lasts until it is superseded by a subsequent action."
+        },
+        {
+            "name": "updatetermse",
+            "type": "updatetermse",
+            "ricardian_contract": "**PARAMETERS:** \n* __termsid__ is a number id of the terms reference stored in the contract.\n* __terms__ is checksum hash of the updated terms.\n* __managing_account__ eos account name to scope this action to a specific dac.\n\n**INTENT:** The intent of {{ updatetermse }} is to change the URL link specifying where the terms of a pre-existing record of member terms are located, associated with the given version {{ termsid }}.\n\n**TERM:** The update terms action lasts until it is superseded by a subsequent action."
         }
     ],
     "tables": [

@@ -61,13 +61,13 @@
 **INTENT:** The intent of {{ transfer }} is to allow an account {{ from }} to send {{ quantity }} tokens to another account {{ to }}.  A note {{ memo }} can be sent to the receiver.
 
 **TERM:** The transfer action represents a change in the asset balances of the accounts involved in the transaction."
-s
+
 <h1 class="contract">
    memberreg
 </h1>
 
 **PARAMETERS:** 
-* __sender__ is a type of eosio account_name 
+* __sender__ eos account name for a registering member
 * __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 characters
 
 **INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.
@@ -75,11 +75,37 @@ s
 **TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superseded by an updated memberreg or memberunreg action.
 
 <h1 class="contract">
+   memberrege
+</h1>
+
+**PARAMETERS:** 
+* __sender__ eos account name for a registering member
+* __agreedterms__ hash reference to a document contained in a string with a maximum of 256 characters
+* __managing_account__ eos account name to scope this action to a specific dac.
+
+**INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.
+
+**TERM:** This action lasts for the duration of the processing of the contract. The member registration will persist on the deployed contract as long as it is active or superseded by an updated memberreg or memberunreg action.
+
+
+<h1 class="contract">
    memberunreg
 </h1>
 
 **PARAMETERS:** 
-* __sender__ is a type of eosio account_name
+* __sender__ eos account name for a unregistering member
+
+**INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.
+
+**TERM:** This action lasts for the duration of the processing of the contract. The action will persist on the deployed contract as long as it is active or superseded by an updated memberreg action.
+
+<h1 class="contract">
+   memberunrege
+</h1>
+
+**PARAMETERS:** 
+* __sender__ eos account name for a unregistering member
+* __managing_account__ eos account name to scope this action to a specific dac.
 
 **INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.
 
@@ -94,6 +120,19 @@ s
 * __terms__ is checksum hash of the updated terms.
 
 **INTENT:** The intent of {{ updateterms }} is to change the URL link specifying where the terms of a pre-existing record of member terms are located, associated with the given version {{ termsid }}.
+
+**TERM:** The update terms action lasts until it is superseded by a subsequent action.
+
+<h1 class="contract">
+   updatetermse
+</h1>
+
+**PARAMETERS:** 
+* __termsid__ is a number id of the terms reference stored in the contract.
+* __terms__ is checksum hash of the updated terms.
+* __managing_account__ eos account name to scope this action to a specific dac.
+
+**INTENT:** The intent of {{ updatetermse }} is to change the URL link specifying where the terms of a pre-existing record of member terms are located, associated with the given version {{ termsid }}.
 
 **TERM:** The update terms action lasts until it is superseded by a subsequent action.
 
@@ -127,6 +166,19 @@ Term: The updateconfig action lasts for the duration of the processing of the co
 **PARAMETERS:** 
 * __terms__ content for new member terms so that they can accessed on the front end clients.
 * __hash__ a checksum hash to verify the contents that would be be agreed to on the client has not been changed. 
+
+**INTENT:** Add an updated member terms entry after content has been changed in the member agreement.
+
+**TERM:** The newmemterms action lasts for the duration of the processing of the contract.
+
+<h1 class="contract">
+   newmemtermse
+</h1>
+
+**PARAMETERS:** 
+* __terms__ content for new member terms so that they can accessed on the front end clients.
+* __hash__ a checksum hash to verify the contents that would be be agreed to on the client has not been changed. 
+* __managing_account__ eos account name to scope this action to a specific dac.
 
 **INTENT:** Add an updated member terms entry after content has been changed in the member agreement.
 
