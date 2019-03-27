@@ -3,7 +3,7 @@
 </h1>
 
 **PARAMETERS:** 
-* __issuer__ is a type of eosio account_name
+* __issuer__ is a type of eosio name
 * __maximum_supply__ is a type of asset
 * __transferred_locked__ is either 1 (true) or 0 (false)
 
@@ -16,11 +16,11 @@
 </h1>
 
 **PARAMETERS:** 
-* __to__ is a type of eosio accountname to issue tokens to
+* __to__ is a type of eosio name to issue tokens to
 * __quantity__ is a type of eosio asset
 * __memo__ is a string with a maximum of 256 characters
        
-**INTENT:** The intent of {{ issue }} is to issue tokens {{ quantity }} and send them to the account specified {{ to }} using the transfer action. This requires a privileged account. A note {{ memo }} can be sent to the receiver.
+**INTENT:** The intent of {{ issue }} is to issue tokens {{ quantity }} and send them to the account specified {{ to }} using the transfer action. This requires the account owner account. A note {{ memo }} can be sent to the receiver.
 
 **TERM:** The action lasts for the duration of the processing of the contract.
 
@@ -41,7 +41,7 @@
 </h1>
 
 **PARAMETERS:** 
-* __from__ is a type of eosio account_name for the owner of the tokens to burn.
+* __from__ is a type of eosio name for the owner of the tokens to burn.
 * __quantity__ is a type of eosio asset
 
 **INTENT:** The intent of {{ burn }} is to allow a user to burn {{ quantity }} tokens that belong to them. 
@@ -53,8 +53,8 @@
 </h1>
 
 **PARAMETERS:** 
-* __from__ is a type of eosio account_name
-* __to__ is a type of eosio account_name
+* __from__ is a type of eosio name
+* __to__ is a type of eosio name
 * __quantity__ is a type of eosio asset
 * __memo__ is a string with a maximum of 256 characters
 
@@ -67,7 +67,7 @@ s
 </h1>
 
 **PARAMETERS:** 
-* __sender__ is a type of eosio account_name 
+* __sender__ is a type of eosio name 
 * __agreedterms__ is a hash reference to a document contained in a string with a maximum of 256 characters
 
 **INTENT:** The intent of memberreg is to indicate that the account has agreed to the terms of the DAC. It will update an internal database of member accounts. This action must supply the hash of the agreement in {{ agreedterms }}, it will hold the most recently agreed to, and can be called multiple times to update the hash.
@@ -79,7 +79,7 @@ s
 </h1>
 
 **PARAMETERS:** 
-* __sender__ is a type of eosio account_name
+* __sender__ is a type of eosio name
 
 **INTENT:** The intent of memberunreg is to allow an account {{ sender }} to unregister its membership.
 
